@@ -4,6 +4,8 @@ Guía de cómo está construido el backend y qué reglas seguir al agregar códi
 
 - **Modelo de datos:** [modelo-de-datos.md](modelo-de-datos.md)
 - **Contrato de la API:** [api/convenciones.md](api/convenciones.md) y [api/endpoints.md](api/endpoints.md)
+- **Tiempo real:** [tiempo-real.md](tiempo-real.md)
+- **Documentación interactiva:** `http://127.0.0.1:8000/docs/api` (local), generada por Scramble
 
 ## 1. Stack
 
@@ -12,6 +14,8 @@ Guía de cómo está construido el backend y qué reglas seguir al agregar códi
 | PHP | 8.2+ | |
 | Laravel | 12 | Framework |
 | Sanctum | 4 | Autenticación por token Bearer |
+| Reverb | 1 | WebSockets: chat, estado en línea, notificaciones |
+| Scramble | 0.13 | Documentación OpenAPI generada desde el código |
 | MySQL | 8 | Base de datos (desarrollo y producción) |
 | SQLite en memoria | — | Solo para tests |
 | Pest | 3 | Tests |
@@ -21,7 +25,9 @@ Guía de cómo está construido el backend y qué reglas seguir al agregar códi
 
 ```
 app/
+├── Broadcasting/           Autorización de canales de tiempo real con lógica propia.
 ├── Enums/                  Estados, roles y tipos. Nunca strings sueltos.
+├── Events/                 Eventos que se transmiten por Reverb (ver tiempo-real.md).
 ├── Http/
 │   ├── Controllers/Api/    Un controller por recurso. Delgados.
 │   ├── Middleware/         role:…, not_blocked
@@ -36,6 +42,7 @@ database/
 ├── factories/              Datos de prueba para tests.
 └── seeders/                Catálogos (comunas, categorías) + DemoSeeder.
 routes/api.php              Todas las rutas, prefijo /api/v1.
+routes/channels.php         Canales de tiempo real.
 tests/Feature/              Un archivo por recurso.
 ```
 
@@ -122,5 +129,6 @@ vendor/bin/pint --dirty       # formatear lo que cambiaste
 6. Service si aplica la regla de la sección 3.
 7. Resource para la respuesta.
 8. Tests en `tests/Feature/<Recurso>Test.php`.
-9. Documentar el endpoint en [api/endpoints.md](api/endpoints.md).
-10. `vendor/bin/pint --dirty` y `php artisan test` en verde.
+9. Documentar el endpoint en [api/endpoints.md](api/endpoints.md) (moverlo de "Planeados" a "Implementados"). Revisar que `/docs/api` lo muestre bien; si Scramble no infiere algo, agregar PHPDoc al método del controller.
+10. Si emite eventos en tiempo real, seguir la convención de [tiempo-real.md](tiempo-real.md).
+11. `vendor/bin/pint --dirty` y `php artisan test` en verde.

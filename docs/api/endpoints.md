@@ -2,6 +2,8 @@
 
 Todas las rutas cuelgan de `/api/v1`. Formato de respuesta, errores y tipos: [convenciones.md](convenciones.md).
 
+Este documento da la visión por módulo y el contrato de lo que falta. El detalle exacto de campos de lo ya implementado está en la documentación interactiva, generada desde el código: `http://127.0.0.1:8000/docs/api` (entorno local).
+
 **Leyenda de acceso:** 🌐 público · 🔑 autenticado · 👤 cliente · 🛠 profesional · 🛡 admin
 
 ## Parte 1 — Implementados
@@ -93,6 +95,7 @@ Logout revoca el token actual y devuelve `data: null`. `me` devuelve el mismo ob
 ```json
 {
   "success": true,
+  "message": null,
   "data": [
     {
       "id": 1, "parent_id": null, "name": "Plomería", "slug": "plomeria", "icon": "droplets",
@@ -131,6 +134,7 @@ Solo aparecen profesionales **verificados y no bloqueados**. Nunca incluyen emai
 ```json
 {
   "success": true,
+  "message": null,
   "data": [
     {
       "id": 5,
@@ -243,6 +247,16 @@ Paginado. El cliente ve las suyas, el profesional las suyas, el admin todas. Ord
 
 ---
 
+### Tiempo real
+
+| Método | Ruta | Acceso | Uso |
+|--------|------|--------|-----|
+| POST | `/broadcasting/auth` | 🔑 | Autoriza la suscripción a canales privados y de presencia. Lo llama Laravel Echo solo. |
+
+Canales y configuración del cliente: [../tiempo-real.md](../tiempo-real.md).
+
+---
+
 ## Parte 2 — Planeados (contrato por módulo)
 
 Rutas y responsables acordados antes de implementar. Al implementar un endpoint se mueve a la Parte 1 con su detalle. Si hace falta cambiar una ruta, se acuerda con el equipo primero.
@@ -341,4 +355,4 @@ Amplía `GET /professionals` con `lat`, `lng` (distancia en km y orden por cerca
 | POST | `/notifications/{id}/read` | 🔑 | HU018 |
 | POST | `/notifications/read-all` | 🔑 | HU018 |
 
-Tiempo real con Laravel Reverb: canal privado `booking.{id}` (mensajes) y canal de presencia para el estado en línea (HU041).
+Los mensajes y el estado en línea viajan por el canal de presencia `presence-booking.{id}`; las notificaciones, por `private-App.Models.User.{id}`. Ya configurados: ver [../tiempo-real.md](../tiempo-real.md).

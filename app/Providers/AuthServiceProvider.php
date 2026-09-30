@@ -2,12 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Gate;
 use App\Models\Booking;
-use App\Policies\BookingPolicy;
 use App\Models\ProfessionalProfile;
+use App\Policies\BookingPolicy;
 use App\Policies\ProfessionalPolicy;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\ServiceProvider;
 
 class AuthServiceProvider extends ServiceProvider
 {
@@ -22,4 +22,3 @@ class AuthServiceProvider extends ServiceProvider
         Gate::policy(ProfessionalProfile::class, ProfessionalPolicy::class);
     }
 }
-

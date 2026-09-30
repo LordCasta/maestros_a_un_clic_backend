@@ -11,25 +11,28 @@ Reglas que cumplen **todos** los endpoints. El frontend puede asumirlas sin revi
 | Headers | `Accept: application/json` siempre. `Authorization: Bearer <token>` en rutas protegidas. |
 | Nombres | `snake_case` en JSON, query params y campos de formulario. |
 | Versionado | Un cambio que rompa el contrato va en `/api/v2`. Agregar campos no rompe el contrato. |
+| Docs interactivas | `http://127.0.0.1:8000/docs/api` (solo en entorno `local`). Las genera Scramble desde el código: permite probar cada endpoint. |
 
 ## Respuesta exitosa
 
 ```json
 {
   "success": true,
-  "message": "Texto para mostrar al usuario (opcional)",
+  "message": "Reserva cancelada.",
   "data": { }
 }
 ```
 
-- `data` siempre está presente. Puede ser un objeto, una lista o `null` (p. ej. al cerrar sesión).
-- `message` solo aparece en acciones (crear, cancelar…), no en lecturas.
+- `success`, `message` y `data` **siempre** están presentes.
+- `message` es un texto para mostrar al usuario en acciones (crear, cancelar…) y `null` en lecturas.
+- `data` puede ser un objeto, una lista o `null` (p. ej. al cerrar sesión).
 
 ### Listas paginadas
 
 ```json
 {
   "success": true,
+  "message": null,
   "data": [ ],
   "meta": { "current_page": 1, "last_page": 4, "per_page": 15, "total": 52 }
 }
