@@ -1,122 +1,190 @@
-Maestros a un clic - Backend API (Laravel 12)
+# Maestros a un clic - API para Frontend
 
-Resumen rápido
+Documentación de consumo del backend Laravel 12 para integraciones frontend.
 
-Este repositorio contiene una API RESTful mínima viable para la plataforma "Maestros a un clic" construida sobre Laravel 12 con Sanctum, Storage preparado para migrar a S3, pattern de Services/Repositories, Form Requests y Resources.
+## 1) Convenciones globales
 
-Setup local (Windows PowerShell)
+- **Base URL:** `/api`
+- **Formato estándar de éxito:**
 
-1. Copiar variables de entorno y configurar DB:
-
-```powershell
-copy .env.example .env
-# Edita .env para apuntar a tu base de datos MySQL local
-php artisan key:generate
-composer install
+```json
+{
+  "success": true,
+  "message": "Texto opcional",
+  "data": {}
+}
 ```
 
-2. Crear enlace de storage y ejecutar migraciones + seeders
+- **Formato estándar de error de validación:**
 
-```powershell
-php artisan storage:link
-php artisan migrate --seed
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": {
+    "field": ["mensaje"]
+  }
+}
 ```
 
-3. Ejecutar tests (si los agregas luego)
+- **Headers recomendados para todas las peticiones:**
+  - `Accept: application/json`
+  - `Authorization: Bearer <token>` para rutas protegidas
+- **Archivos:** usar `multipart/form-data`.
+- **Fechas:** `YYYY-MM-DD HH:mm:ss`.
+- **Moneda:** número entero o decimal según el endpoint.
 
-```powershell
-php artisan test --filter=NameOfTest
-```
+## 2) Estado actual del backend
 
-Endpoints principales
+### Implementado y consumible hoy
+- Autenticación Sanctum
+- Registro de cliente
+- Registro de profesional
+- Login / Logout / Me
+- Listado / detalle de profesionales
+- Subida de archivos
+- Favoritos
+- Reservas (crear, listar, detalle, cancelar)
+- Dashboard de cliente
 
-Auth
-- POST /api/auth/register/client (multipart/form-data)
-- POST /api/auth/register/professional (multipart/form-data)
-- POST /api/auth/login (application/json)
-- POST /api/auth/logout (Authorization: Bearer)
-- GET  /api/auth/me   (Authorization: Bearer)
+### Pendiente / no expuesto todavía en `routes/api.php`
+Estas capacidades **no existen como endpoints reales hoy** en la estructura actual:
+- CRUD de servicios del profesional
+- Agenda / disponibilidad del profesional
+- Aceptar / rechazar / reprogramar reservas desde el profesional
 
-Profesionales
-- GET /api/professionals
-- GET /api/professionals/{id}
+> El frontend no debe consumir esos endpoints todavía. Si se implementan después, esta documentación se actualiza con el contrato final.
 
-Favoritos (auth)
-- GET /api/favorites
-- POST /api/favorites/{professional}
-- DELETE /api/favorites/{professional}
+## 3) Auth
 
-Reservas (auth)
-- POST /api/bookings
-- GET /api/bookings
-- GET /api/bookings/{id}
-- POST /api/bookings/{id}/cancel
+### POST `/api/auth/register/client`
+**Auth:** No
+**Content-Type:** `multipart/form-data`
 
-Client dashboard (auth)
-- GET /api/client/dashboard
+Campos:
+- `name` required
+- `email` required, unique
+- `password` required, min 8
+- `password_confirmation` required
+- `selfie` required, imagen segura
+- `document` required, archivo seguro
+- `commune` optional
+- `latitude` optional
+- `longitude` optional
+- `phone` optional
 
-Ejemplos de requests
-
-1) Registro cliente (multipart/form-data)
-
-Fields:
-- name
-- email
-- password
-- password_confirmation
-- selfie (file)
-- document (file)
-- commune
-- latitude
-- longitude
-
-Curl ejemplo:
+Ejemplo de request:
 
 ```bash
 curl -X POST "http://localhost/api/auth/register/client" \
+  -H "Accept: application/json" \
   -F "name=Juan Cliente" \
   -F "email=juan@example.test" \
   -F "password=secret123" \
   -F "password_confirmation=secret123" \
+  -F "commune=Santiago" \
+  -F "latitude=-33.4489" \
+  -F "longitude=-70.6693" \
   -F "selfie=@/path/to/selfie.jpg" \
-  -F "document=@/path/to/doc.pdf"
+  -F "document=@/path/to/document.pdf"
 ```
 
-2) Registro profesional (multipart/form-data)
+Respuesta 201:
 
-Fields:
-- name
-- email
-- password
-- password_confirmation
-- profile_photo (file)
-- specialties[] (ids)
-- hourly_rate
-- experience_years
-- description
-- certificates[] (files)
-- portfolio_images[] (files)
+```json
+{
+  "success": true,
+  "message": "Usuario registrado",
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "Juan Cliente",
+      "email": "juan@example.test",
+      "phone": null,
+      "avatar": null,
+      "role": "client",
+      "commune": "Santiago",
+      "is_verified": false,
+      "created_at": "2026-05-19 12:00:00"
+    },
+    "token": "plain-text-token"
+  }
+}
+```
 
-Curl ejemplo:
+---
+
+### POST `/api/auth/register/professional`
+**Auth:** No
+**Content-Type:** `multipart/form-data`
+
+Campos:
+- `name` required
+- `email` required, unique
+- `password` required, min 8
+- `password_confirmation` required
+- `description` required, min 50
+- `experience_years` required, integer >= 0
+- `specialties[]` required, ids existentes
+- `hourly_rate` optional, numeric >= 0
+- `profile_photo` optional, imagen
+- `certificates[]` optional, archivos
+- `portfolio_images[]` optional, imágenes
+- `commune` optional
+- `latitude` optional
+- `longitude` optional
+- `phone` optional
+
+Ejemplo de request:
 
 ```bash
 curl -X POST "http://localhost/api/auth/register/professional" \
+  -H "Accept: application/json" \
   -F "name=Carlos Pro" \
   -F "email=carlos@example.test" \
   -F "password=secret123" \
   -F "password_confirmation=secret123" \
-  -F "description=Especialista en fontanería con 10 años de experiencia..." \
+  -F "description=Especialista en fontanería con más de 10 años de experiencia en instalaciones y mantenimiento." \
+  -F "experience_years=10" \
   -F "specialties[]=1" \
+  -F "specialties[]=2" \
+  -F "hourly_rate=45000" \
+  -F "commune=Santiago" \
   -F "profile_photo=@/path/to/photo.jpg" \
   -F "certificates[]=@/path/to/cert.pdf" \
   -F "portfolio_images[]=@/path/to/port1.jpg"
 ```
 
-3) Login (application/json)
+Respuesta 201:
 
-POST /api/auth/login
+```json
+{
+  "success": true,
+  "message": "Profesional registrado",
+  "data": {
+    "user": {
+      "id": 2,
+      "name": "Carlos Pro",
+      "email": "carlos@example.test",
+      "role": "professional"
+    },
+    "token": "plain-text-token"
+  }
+}
+```
 
-Body:
+---
+
+### POST `/api/auth/login`
+**Auth:** No
+**Content-Type:** `application/json`
+
+Campos:
+- `email` required
+- `password` required
+
+Ejemplo:
+
 ```json
 {
   "email": "juan@example.test",
@@ -124,43 +192,507 @@ Body:
 }
 ```
 
-Respuesta esperada:
+Respuesta 200:
+
 ```json
 {
   "success": true,
   "message": "Autenticado",
   "data": {
-    "token": "<plain-text-token>",
-    "user": { /* user resource */ },
-    "role": "client"
+    "token": "plain-text-token",
+    "role": "client",
+    "user": {
+      "id": 1,
+      "name": "Juan Cliente",
+      "email": "juan@example.test",
+      "phone": null,
+      "avatar": null,
+      "role": "client",
+      "commune": "Santiago",
+      "is_verified": false,
+      "created_at": "2026-05-19 12:00:00"
+    }
   }
 }
 ```
 
-Notas de seguridad y despliegue
+Notas:
+- Tiene rate limit configurado en la ruta.
+- Si falla la validación y el cliente no envía `Accept: application/json`, Laravel puede responder con HTML o redirect.
 
-- Las contraseñas se almacenan con Hash::make
-- Validaciones estrictas en FormRequests (mime, size)
-- Rate limiting de login puede añadirse con throttle middleware en rutas
-- Para producción configure FILESYSTEM_DISK=s3 y añada variables AWS_* en .env
+---
 
-Siguientes pasos recomendados
+### POST `/api/auth/logout`
+**Auth:** Sí, Bearer token
 
-- Completar tests con Pest
-- Añadir control granular de roles/permissions (Spatie) si se requiere UI de administración
-- Mejorar búsqueda por distancia (Haversine o un motor geoespacial)
-- Añadir notificaciones y jobs para confirmaciones de reservas
+Respuesta 200:
 
-Si quieres, procedo a:
-- Añadir factories/seeders adicionales para profesionales de ejemplo
-- Añadir tests básicos para auth, registrations y uploads
-- Añadir paginación/filtrado avanzado y cálculo de distancia
-
-```bash
-# comandos útiles
-php artisan migrate --seed
-php artisan storage:link
-composer install
-php artisan test
+```json
+{
+  "success": true,
+  "message": "Sesión cerrada"
+}
 ```
 
+---
+
+### GET `/api/auth/me`
+**Auth:** Sí, Bearer token
+
+Respuesta 200:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Juan Cliente",
+    "email": "juan@example.test",
+    "phone": null,
+    "avatar": null,
+    "role": "client",
+    "commune": "Santiago",
+    "is_verified": false,
+    "created_at": "2026-05-19 12:00:00"
+  }
+}
+```
+
+---
+
+## 4) Profesionales
+
+### GET `/api/professionals`
+**Auth:** No
+
+Query params soportados actualmente:
+- `commune`
+- `specialty_id`
+- `min_price`
+- `max_price`
+- `per_page` (default `15`)
+
+Ejemplo:
+
+```text
+/api/professionals?commune=Santiago&specialty_id=1&min_price=10000&max_price=50000&per_page=10
+```
+
+Respuesta 200:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 2,
+      "name": "Carlos Pro",
+      "email": "carlos@example.test",
+      "avatar": "http://localhost/storage/profiles/photo.jpg",
+      "commune": "Santiago",
+      "description": "...",
+      "experience_years": 10,
+      "hourly_rate": "45000.00",
+      "is_verified": true,
+      "specialties": [
+        { "id": 1, "name": "Plomería", "slug": "plomeria" }
+      ],
+      "portfolio": [
+        { "image": "http://localhost/storage/portfolio/1.jpg", "description": null }
+      ]
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "per_page": 10,
+    "total": 1
+  }
+}
+```
+
+---
+
+### GET `/api/professionals/{id}`
+**Auth:** No
+
+Respuesta 200:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 2,
+    "name": "Carlos Pro",
+    "email": "carlos@example.test",
+    "avatar": "http://localhost/storage/profiles/photo.jpg",
+    "commune": "Santiago",
+    "description": "...",
+    "experience_years": 10,
+    "hourly_rate": "45000.00",
+    "is_verified": true,
+    "specialties": [],
+    "portfolio": []
+  }
+}
+```
+
+---
+
+## 5) Subidas
+
+### POST `/api/uploads`
+**Auth:** Sí, Bearer token
+**Content-Type:** `multipart/form-data`
+
+Campos:
+- `file` required
+- `folder` optional (`profiles`, `selfies`, `documents`, `certificates`, `portfolio`, etc.)
+
+Respuesta 200:
+
+```json
+{
+  "success": true,
+  "data": {
+    "path": "profiles/abc123.jpg",
+    "url": "http://localhost/storage/profiles/abc123.jpg"
+  }
+}
+```
+
+Notas:
+- El backend usa `Storage::disk('public')`.
+- El frontend debe enviar el archivo como `file`.
+
+---
+
+## 6) Favoritos
+
+### GET `/api/favorites`
+**Auth:** Sí, Bearer token
+**Rol esperado:** `client`
+
+Respuesta 200:
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "client_id": 10,
+      "professional": {
+        "id": 2,
+        "name": "Carlos Pro",
+        "email": "carlos@example.test",
+        "avatar": null,
+        "commune": "Santiago",
+        "description": "...",
+        "experience_years": 10,
+        "hourly_rate": "45000.00",
+        "is_verified": true,
+        "specialties": [],
+        "portfolio": []
+      },
+      "created_at": "2026-05-19 12:00:00"
+    }
+  ]
+}
+```
+
+---
+
+### POST `/api/favorites/{professional}`
+**Auth:** Sí, Bearer token
+
+- `{professional}` debe ser un usuario con rol `professional`
+- El backend evita duplicados con `firstOrCreate`
+
+Respuesta 201:
+
+```json
+{
+  "success": true,
+  "message": "Agregado a favoritos",
+  "data": {
+    "id": 1,
+    "client_id": 10,
+    "professional": {
+      "id": 2,
+      "name": "Carlos Pro"
+    }
+  }
+}
+```
+
+---
+
+### DELETE `/api/favorites/{professional}`
+**Auth:** Sí, Bearer token
+
+Respuesta 200:
+
+```json
+{
+  "success": true,
+  "message": "Eliminado de favoritos"
+}
+```
+
+---
+
+## 7) Reservas
+
+### POST `/api/bookings`
+**Auth:** Sí, Bearer token
+**Rol esperado:** `client`
+**Content-Type:** `application/json`
+
+Body:
+
+```json
+{
+  "professional_id": 2,
+  "service_description": "Instalación de grifería",
+  "scheduled_date": "2026-06-01 14:00:00",
+  "total": 45000
+}
+```
+
+Reglas clave:
+- `professional_id` requerido
+- `scheduled_date` debe ser futura
+- `total` opcional, pero si viene debe ser numérico
+
+Respuesta 201:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 42,
+    "client_id": 10,
+    "professional_id": 2,
+    "service_description": "Instalación de grifería",
+    "scheduled_date": "2026-06-01 14:00:00",
+    "status": "pending",
+    "total": 45000,
+    "created_at": "2026-05-19 12:00:00"
+  }
+}
+```
+
+---
+
+### GET `/api/bookings`
+**Auth:** Sí, Bearer token
+
+Comportamiento actual:
+- Si el usuario autenticado es `professional`, lista sus reservas por `professional_id`.
+- Si el usuario autenticado es `client`, lista sus reservas por `client_id`.
+
+Respuesta 200:
+
+```json
+{
+  "success": true,
+  "data": []
+}
+```
+
+---
+
+### GET `/api/bookings/{id}`
+**Auth:** Sí, Bearer token
+
+- Protegido por policy
+- Solo pueden verlo el cliente, el profesional asociado o un admin
+
+Respuesta 200:
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 42,
+    "client_id": 10,
+    "professional_id": 2,
+    "service_description": "Instalación de grifería",
+    "scheduled_date": "2026-06-01 14:00:00",
+    "status": "pending",
+    "total": 45000,
+    "created_at": "2026-05-19 12:00:00"
+  }
+}
+```
+
+---
+
+### POST `/api/bookings/{id}/cancel`
+**Auth:** Sí, Bearer token
+
+- Protegido por policy
+- Actualmente solo el cliente dueño o admin puede cancelar
+- El estado pasa a `cancelled`
+
+Respuesta 200:
+
+```json
+{
+  "success": true,
+  "message": "Reserva cancelada",
+  "data": {
+    "id": 42,
+    "status": "cancelled"
+  }
+}
+```
+
+---
+
+## 8) Dashboard del cliente
+
+### GET `/api/client/dashboard`
+**Auth:** Sí, Bearer token
+
+Devuelve:
+- `active_bookings`
+- `favorites`
+- `nearby_professionals`
+- `popular_categories`
+
+Respuesta 200:
+
+```json
+{
+  "success": true,
+  "data": {
+    "active_bookings": [],
+    "favorites": [],
+    "nearby_professionals": [],
+    "popular_categories": []
+  }
+}
+```
+
+---
+
+## 9) Estructura de recursos que el frontend puede esperar
+
+### `UserResource`
+Campos:
+- `id`
+- `name`
+- `email`
+- `phone`
+- `avatar`
+- `role`
+- `commune`
+- `is_verified`
+- `created_at`
+
+### `ProfessionalResource`
+Campos:
+- `id`
+- `name`
+- `email`
+- `avatar`
+- `commune`
+- `description`
+- `experience_years`
+- `hourly_rate`
+- `is_verified`
+- `specialties[]`
+- `portfolio[]`
+
+### `BookingResource`
+Campos:
+- `id`
+- `client_id`
+- `professional_id`
+- `service_description`
+- `scheduled_date`
+- `status`
+- `total`
+- `created_at`
+
+### `FavoriteResource`
+Campos:
+- `id`
+- `client_id`
+- `professional`
+- `created_at`
+
+## 10) Lo que el frontend NO debe consumir todavía
+
+Estas rutas fueron solicitadas como idea funcional, pero hoy **no están implementadas en el backend actual**:
+
+- `GET /api/professional/services`
+- `POST /api/professional/services`
+- `PUT /api/professional/services/{id}`
+- `DELETE /api/professional/services/{id}`
+- `GET /api/professional/availability`
+- `POST /api/professional/availability`
+- `POST /api/bookings/{id}/accept`
+- `POST /api/bookings/{id}/reject`
+- `POST /api/bookings/{id}/reschedule`
+
+### Observación importante
+Existe `availability_status` en `professional_profiles`, pero eso **no es una agenda real**. Solo indica estado general del perfil (`available`, `busy`, `offline`).
+
+## 11) Errores frecuentes al consumir la API
+
+### La API responde HTML en vez de JSON
+Causa común: falta el header `Accept: application/json`.
+
+### `401 Unauthenticated`
+Causa: falta token o token inválido.
+
+### `403 Forbidden`
+Causa: el usuario autenticado no tiene el rol correcto o la policy bloqueó la acción.
+
+### `422 Validation failed`
+Causa: faltan campos o el formato no cumple las reglas.
+
+### `429 Too Many Requests`
+Causa: el login tiene rate limiting.
+
+## 12) Recomendaciones para frontend
+
+- Guardar el token de Sanctum después del login/registro.
+- Enviar `Authorization: Bearer <token>` en todas las rutas protegidas.
+- Enviar `Accept: application/json` siempre.
+- Usar `multipart/form-data` solo cuando haya archivos.
+- No asumir endpoints de servicios/agendas hasta que existan en `routes/api.php`.
+
+---
+
+## 13) Resumen rápido de endpoints consumibles hoy
+
+### Auth
+- `POST /api/auth/register/client`
+- `POST /api/auth/register/professional`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
+
+### Profesionales
+- `GET /api/professionals`
+- `GET /api/professionals/{id}`
+
+### Archivos
+- `POST /api/uploads`
+
+### Favoritos
+- `GET /api/favorites`
+- `POST /api/favorites/{professional}`
+- `DELETE /api/favorites/{professional}`
+
+### Reservas
+- `POST /api/bookings`
+- `GET /api/bookings`
+- `GET /api/bookings/{id}`
+- `POST /api/bookings/{id}/cancel`
+
+### Dashboard cliente
+- `GET /api/client/dashboard`
