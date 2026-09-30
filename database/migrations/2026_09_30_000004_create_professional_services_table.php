@@ -6,26 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('portfolio_items', function (Blueprint $table) {
+        Schema::create('professional_services', function (Blueprint $table) {
             $table->id();
             $table->foreignId('professional_profile_id')->constrained('professional_profiles')->cascadeOnDelete();
-            $table->string('image_path');
+            $table->foreignId('category_id')->constrained('categories')->restrictOnDelete();
+            $table->string('title');
             $table->text('description')->nullable();
+            $table->string('price_type', 20);
+            $table->decimal('price', 12, 2);
+            $table->unsignedSmallInteger('estimated_duration_minutes');
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('portfolio_items');
+        Schema::dropIfExists('professional_services');
     }
 };
-

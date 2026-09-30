@@ -1,86 +1,50 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 
-uses(RefreshDatabase::class);
+it('logs in and returns a token with the user payload', function () {
+    $user = User::factory()->client()->create(['email' => 'cliente@example.com']);
 
-it('logs in and returns a sanctum token with user payload', function () {
-    $user = User::factory()->create([
-        'name' => 'Cliente Prueba',
-        'email' => 'cliente-login@example.com',
-        'password' => Hash::make('password123'),
-        'role' => 'client',
-        'commune' => 'Santiago',
-    ]);
-
-    $response = $this->postJson('/api/auth/login', [
-        'email' => 'cliente-login@example.com',
-        'password' => 'password123',
+    $response = $this->postJson('/api/v1/auth/login', [
+        'email' => 'cliente@example.com',
+        'password' => 'password',
     ]);
 
     $response->assertOk()
-        ->assertJson([
-            'success' => true,
-            'message' => 'Autenticado',
-        ])
+        ->assertJson(['success' => true, 'message' => 'Sesión iniciada.'])
+        ->assertJsonPath('data.user.id', $user->id)
         ->assertJsonPath('data.user.role', 'client')
-        ->assertJsonPath('data.role', 'client')
-        ->assertJsonStructure([
-            'success',
-            'message',
-            'data' => [
-                'token',
-                'user' => [
-                    'id',
-                    'name',
-                    'email',
-                    'phone',
-                    'avatar',
-                    'role',
-                    'commune',
-                    'is_verified',
-                    'created_at',
-                ],
-                'role',
-            ],
-        ]);
+        ->assertJsonStructure(['data' => [
+            'token',
+            'user' => ['id', 'name', 'email', 'phone', 'avatar_url', 'role', 'commune', 'verification_status', 'rating', 'created_at'],
+        ]]);
 
-    $token = $response->json('data.token');
-
-    expect($token)->not->toBeEmpty();
-
-    $this->assertDatabaseCount('personal_access_tokens', 1);
-    $this->assertDatabaseHas('personal_access_tokens', [
-        'tokenable_id' => $user->id,
-        'tokenable_type' => User::class,
-        'name' => 'api-token',
-    ]);
-
-    $meResponse = $this->withToken($token)->getJson('/api/auth/me');
-
-    $meResponse->assertOk()
-        ->assertJsonPath('data.email', 'cliente-login@example.com')
-        ->assertJsonPath('data.role', 'client');
+    $this->withToken($response->json('data.token'))
+        ->getJson('/api/v1/auth/me')
+        ->assertOk()
+        ->assertJsonPath('data.email', 'cliente@example.com');
 });
 
-it('rejects invalid credentials on login', function () {
-    User::factory()->create([
-        'email' => 'cliente-login@example.com',
-        'password' => Hash::make('password123'),
-    ]);
+it('rejects invalid credentials', function () {
+    User::factory()->create(['email' => 'cliente@example.com']);
 
-    $response = $this->postJson('/api/auth/login', [
-        'email' => 'cliente-login@example.com',
+    $this->postJson('/api/v1/auth/login', [
+        'email' => 'cliente@example.com',
         'password' => 'wrong-password',
-    ]);
-
-    $response->assertUnauthorized()
-        ->assertJson([
-            'success' => false,
-            'message' => 'Credenciales incorrectas',
-        ]);
+    ])
+        ->assertUnauthorized()
+        ->assertExactJson(['success' => false, 'message' => 'Credenciales incorrectas.']);
 });
 
+it('does not let a blocked user log in', function () {
+    User::factory()->blocked()->create(['email' => 'bloqueado@example.com']);
 
+    $this->postJson('/api/v1/auth/login', [
+        'email' => 'bloqueado@example.com',
+        'password' => 'password',
+    ])
+        ->assertForbidden()
+        ->assertJsonPath('success', false);
+
+    $this->assertDatabaseCount('personal_access_tokens', 0);
+});

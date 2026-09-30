@@ -6,40 +6,43 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\FavoriteResource;
 use App\Models\Favorite;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * HU034, HU035. Solo clientes (middleware role:client). Sin Service: no hay reglas
+ * de negocio más allá de una consulta por usuario.
+ */
 class FavoriteController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $favorites = Favorite::with('professional')->where('client_id', $user->id)->get();
+        $favorites = $request->user()->favorites()
+            ->with(['professional.commune', 'professional.professionalProfile.categories'])
+            ->latest()
+            ->get();
 
-        return response()->json(['success' => true, 'data' => FavoriteResource::collection($favorites)]);
+        return $this->ok(FavoriteResource::collection($favorites));
     }
 
-    public function store(Request $request, $professionalId)
+    public function store(Request $request, int $professionalId): JsonResponse
     {
-        $user = $request->user();
-        // ensure professional exists and role
-        $professional = User::where('id', $professionalId)->where('role', 'professional')->firstOrFail();
+        $professional = User::publiclyListed()->findOrFail($professionalId);
 
         $favorite = Favorite::firstOrCreate([
-            'client_id' => $user->id,
+            'client_id' => $request->user()->id,
             'professional_id' => $professional->id,
         ]);
 
-        $favorite->load('professional');
+        $favorite->load(['professional.commune', 'professional.professionalProfile.categories']);
 
-        return response()->json(['success'=>true,'message'=>'Agregado a favoritos','data'=>new FavoriteResource($favorite)],201);
+        return $this->created(new FavoriteResource($favorite), 'Agregado a favoritos.');
     }
 
-    public function destroy(Request $request, $professionalId)
+    public function destroy(Request $request, int $professionalId): JsonResponse
     {
-        $user = $request->user();
-        $deleted = Favorite::where('client_id', $user->id)->where('professional_id', $professionalId)->delete();
+        $request->user()->favorites()->where('professional_id', $professionalId)->delete();
 
-        return response()->json(['success'=>true,'message'=>'Eliminado de favoritos']);
+        return $this->ok(message: 'Eliminado de favoritos.');
     }
 }
-

@@ -1,48 +1,30 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
+use Laravel\Sanctum\Sanctum;
 
-uses(RefreshDatabase::class);
+it('returns the authenticated user through me', function () {
+    Sanctum::actingAs(User::factory()->create(['email' => 'cliente@example.com']));
 
-it('returns the authenticated user through me endpoint', function () {
-    $user = User::factory()->create([
-        'email' => 'cliente-me@example.com',
-        'password' => Hash::make('password123'),
-        'role' => 'client',
-        'commune' => 'Santiago',
-    ]);
-
-    $token = $user->createToken('api-token')->plainTextToken;
-
-    $response = $this->withToken($token)->getJson('/api/auth/me');
-
-    $response->assertOk()
-        ->assertJson([
-            'success' => true,
-        ])
-        ->assertJsonPath('data.email', 'cliente-me@example.com')
-        ->assertJsonPath('data.role', 'client');
+    $this->getJson('/api/v1/auth/me')
+        ->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonPath('data.email', 'cliente@example.com');
 });
 
-it('logs out and revokes the current sanctum token', function () {
-    $user = User::factory()->create([
-        'email' => 'cliente-logout@example.com',
-        'password' => Hash::make('password123'),
-        'role' => 'client',
-    ]);
+it('logs out and revokes the current token', function () {
+    $token = User::factory()->create()->createToken('api-token')->plainTextToken;
 
-    $token = $user->createToken('api-token')->plainTextToken;
-
-    $logoutResponse = $this->withToken($token)->postJson('/api/auth/logout');
-
-    $logoutResponse->assertOk()
-        ->assertJson([
-            'success' => true,
-            'message' => 'Sesión cerrada',
-        ]);
+    $this->withToken($token)
+        ->postJson('/api/v1/auth/logout')
+        ->assertOk()
+        ->assertJson(['success' => true, 'message' => 'Sesión cerrada.', 'data' => null]);
 
     $this->assertDatabaseCount('personal_access_tokens', 0);
 });
 
+it('blocks a user that was blocked after logging in', function () {
+    Sanctum::actingAs(User::factory()->blocked()->create());
+
+    $this->getJson('/api/v1/auth/me')->assertForbidden();
+});

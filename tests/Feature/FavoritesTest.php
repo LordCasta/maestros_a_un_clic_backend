@@ -1,58 +1,43 @@
 <?php
 
-use App\Models\Favorite;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Sanctum\Sanctum;
 
-uses(RefreshDatabase::class);
+it('lets a client add, list and remove a favorite professional', function () {
+    $professional = User::factory()->professional()->verified()->create();
+    Sanctum::actingAs(User::factory()->client()->create());
 
-it('lists a client favorites and can add and remove a professional', function () {
-    $client = User::factory()->create(['role' => 'client']);
-    $professional = User::factory()->create(['role' => 'professional']);
-
-    $token = $client->createToken('api-token')->plainTextToken;
-
-    $storeResponse = $this->withToken($token)->postJson('/api/favorites/'.$professional->id);
-
-    $storeResponse->assertCreated()
-        ->assertJson([
-            'success' => true,
-            'message' => 'Agregado a favoritos',
-        ])
+    $this->postJson("/api/v1/favorites/{$professional->id}")
+        ->assertCreated()
+        ->assertJsonPath('message', 'Agregado a favoritos.')
         ->assertJsonPath('data.professional.id', $professional->id);
 
-    $this->assertDatabaseHas('favorites', [
-        'client_id' => $client->id,
-        'professional_id' => $professional->id,
-    ]);
+    // Agregar dos veces no duplica.
+    $this->postJson("/api/v1/favorites/{$professional->id}")->assertCreated();
 
-    $indexResponse = $this->withToken($token)->getJson('/api/favorites');
-
-    $indexResponse->assertOk()
+    $this->getJson('/api/v1/favorites')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.professional.id', $professional->id);
 
-    $destroyResponse = $this->withToken($token)->deleteJson('/api/favorites/'.$professional->id);
+    $this->deleteJson("/api/v1/favorites/{$professional->id}")
+        ->assertOk()
+        ->assertJsonPath('message', 'Eliminado de favoritos.');
 
-    $destroyResponse->assertOk()
-        ->assertJson([
-            'success' => true,
-            'message' => 'Eliminado de favoritos',
-        ]);
-
-    $this->assertDatabaseMissing('favorites', [
-        'client_id' => $client->id,
-        'professional_id' => $professional->id,
-    ]);
+    $this->assertDatabaseCount('favorites', 0);
 });
 
-it('prevents adding a non professional to favorites', function () {
-    $client = User::factory()->create(['role' => 'client']);
-    $notProfessional = User::factory()->create(['role' => 'client']);
+it('only allows publicly listed professionals as favorites', function () {
+    $unverified = User::factory()->professional()->create();
+    $client = User::factory()->client()->create();
+    Sanctum::actingAs($client);
 
-    $token = $client->createToken('api-token')->plainTextToken;
-
-    $response = $this->withToken($token)->postJson('/api/favorites/'.$notProfessional->id);
-
-    $response->assertNotFound();
+    $this->postJson("/api/v1/favorites/{$unverified->id}")->assertNotFound();
+    $this->postJson("/api/v1/favorites/{$client->id}")->assertNotFound();
 });
 
+it('is only available to clients', function () {
+    Sanctum::actingAs(User::factory()->professional()->verified()->create());
+
+    $this->getJson('/api/v1/favorites')->assertForbidden();
+});
