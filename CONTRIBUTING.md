@@ -6,22 +6,34 @@ Reglas para desarrollar en paralelo sin pisarnos. Aplican igual en el repo del f
 
 Cada módulo tiene **un responsable** que lo hace completo: backend, frontend, tests y documentación. Los módulos y sus endpoints están en [docs/api/endpoints.md](docs/api/endpoints.md) (Parte 2).
 
-| Módulo | Responsable |
-|--------|-------------|
-| Cuenta y perfil | _por asignar_ |
-| Verificación y administración | _por asignar_ |
-| Perfil profesional y servicios | _por asignar_ |
-| Agenda y disponibilidad | _por asignar_ |
-| Ciclo de vida de la reserva | _por asignar_ |
-| Calificaciones y reportes | _por asignar_ |
-| Búsqueda avanzada | _por asignar_ |
-| Chat y notificaciones | _por asignar_ |
+El reparto sigue las cadenas de dependencia, para que cada uno avance sin esperar al otro:
+
+| Módulo | Etiqueta | Responsable | Orden sugerido |
+|--------|----------|-------------|----------------|
+| Perfil profesional y servicios | `módulo: perfil-profesional` | @LordCasta | 1 |
+| Agenda y disponibilidad | `módulo: agenda` | @LordCasta | 2 |
+| Ciclo de vida de la reserva | `módulo: reservas` | @LordCasta | 3 |
+| Chat y notificaciones | `módulo: chat-notificaciones` | @LordCasta | 4 |
+| Cuenta y perfil | `módulo: cuenta` | @barenas12 | 1 |
+| Verificación y administración | `módulo: verificación-admin` | @barenas12 | 2 |
+| Búsqueda avanzada | `módulo: búsqueda` | @barenas12 | 3 |
+| Calificaciones y reportes | `módulo: calificaciones` | @barenas12 | 4 |
+
+Por qué este orden:
+- **@LordCasta:** las reservas necesitan servicios con precio y duración (perfil profesional) y horarios libres (agenda). El chat va al final porque vive dentro de una reserva.
+- **@barenas12:** la verificación habilita reservar (decisión N2) y el panel de admin. La búsqueda avanzada usa la ubicación del perfil. Las calificaciones dependen de que existan reservas completadas, que llegan con el módulo de reservas.
+
+Puntos de contacto entre los dos (acordarlos antes de implementar):
+- `HU030` (disponible ahora, búsqueda) usa la agenda.
+- `HU005` (calificar) se habilita al completar la reserva (`HU028`).
+- `HU018` (notificaciones) la implementa @LordCasta; los otros módulos solo llaman a `$user->notify(...)`.
 
 Si necesitas tocar código de un módulo ajeno, avisa al responsable antes.
 
 ## 2. Tareas
 
-- Cada historia de usuario (HU) es un **issue** en GitHub, con la etiqueta de su módulo.
+- Cada historia de usuario (HU) es un **issue de este repo** (también para el trabajo del frontend), con la etiqueta de su módulo. Las HU que avanzaron en la fase 0 tienen la etiqueta `fase 0: parcial` y dicen qué falta.
+- Un PR del frontend cierra el issue con `Closes LordCasta/maestros_a_un_clic_backend#N`.
 - El tablero del proyecto muestra quién tiene qué y en qué estado va.
 - Una rama y un pull request por HU (o por un grupo pequeño de HU muy relacionadas).
 
