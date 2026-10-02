@@ -1,4 +1,19 @@
 <laravel-boost-guidelines>
+=== .ai/maestros-a-un-clic rules ===
+
+# Maestros a un clic — reglas del proyecto
+
+Antes de escribir código, lee `docs/arquitectura.md`. Resumen de lo que no se negocia:
+
+- API versionada en `/api/v1`. Respuestas solo con `$this->ok()`, `$this->created()`, `$this->paginated()` del controller base; nunca `response()->json()` a mano. Los errores se formatean solos en `bootstrap/app.php`.
+- Capas: Ruta (`auth:sanctum`, `not_blocked`, `role:…`) → FormRequest (solo valida, `authorize()` devuelve `true`) → Controller (llama a la Policy y al Service) → Service (reglas, transacciones, archivos) → Resource.
+- Sin patrón Repository: consultas reutilizables como scopes del modelo.
+- Estados, roles y tipos siempre con los enums de `app/Enums`. Todo cambio de estado de una reserva pasa por `BookingService::transition()`.
+- Archivos solo mediante `App\Services\UploadService`. Documentos KYC y adjuntos del chat van al disco privado.
+- El esquema está definido en `docs/modelo-de-datos.md`. No crear migraciones que lo contradigan sin actualizar ese documento.
+- Cada endpoint nuevo lleva tests (feliz, validación, permisos) y se documenta en `docs/api/endpoints.md`.
+- Mensajes para el usuario en español. Los nombres de campos nuevos se agregan a `lang/es/validation.php` → `attributes`.
+
 === foundation rules ===
 
 # Laravel Boost Guidelines
@@ -9,7 +24,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
-- php - 8.2
+- php - 8.5
 - laravel/framework (LARAVEL) - v12
 - laravel/prompts (PROMPTS) - v0
 - laravel/sanctum (SANCTUM) - v4
@@ -107,6 +122,13 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 # Deployment
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
+
+=== tests rules ===
+
+# Test Enforcement
+
+- Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
+- Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test --compact` with a specific filename or filter.
 
 === laravel/core rules ===
 

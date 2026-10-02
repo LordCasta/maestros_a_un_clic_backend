@@ -1,6 +1,6 @@
 # Modelo de datos — Maestros a un clic
 
-> **Estado:** propuesta v1, pendiente de aprobación. Cuando se apruebe, este documento pasa a ser la fuente de verdad del esquema y las migraciones se escriben a partir de él.
+> **Estado:** v1 aprobada e implementada en `database/migrations` (fase 0, 2026-09-30). Este documento es la fuente de verdad del esquema: cualquier cambio se acuerda aquí primero y después se escribe la migración.
 
 ## 1. Decisiones de diseño
 
@@ -19,6 +19,8 @@
 | D11 | Notificaciones con la tabla nativa `notifications` de Laravel (canal `database`). | HU018 sin reinventar nada; se puede sumar broadcast en tiempo real después. |
 | D12 | Borrado de cuenta con *soft delete* + anonimización. | HU023 exige que no se pierda el historial de reservas y reseñas de la otra parte. |
 | D13 | Promedio de calificación cacheado en `users` (`rating_avg`, `rating_count`). | Ordenar y filtrar por calificación (HU010) sin agregaciones en cada búsqueda. |
+| D14 | El registro solo crea la cuenta y el perfil. Los documentos de identidad se envían después, en el módulo de verificación, igual para clientes y profesionales. El usuario nace `unverified` y pasa a `pending` al enviar documentos. | HU006/HU007 piden registro con correo y contraseña; HU008/HU013 describen la verificación como paso posterior. Registro más corto y módulos independientes. |
+| D15 | Estados, roles y tipos se guardan como `string(20)` y se modelan con enums de PHP (`app/Enums`), no con `ENUM` de MySQL. | Agregar un valor no requiere migración, y el código nunca compara contra strings sueltos. |
 
 ## 2. Diagrama entidad-relación
 
@@ -310,8 +312,10 @@ stateDiagram-v2
 | `bookings.scheduled_date`, `service_description`, `total` | `starts_at` + `ends_at`, `description`, `agreed_price`, `professional_service_id` |
 | Estados `pending, confirmed, on_way, completed, cancelled` | `pending, accepted, rejected, confirmed, in_progress, completed, cancelled` |
 
-## 6. Preguntas abiertas
+## 6. Decisiones de negocio (2026-09-30)
 
-1. **Chat en tiempo real (HU011, HU041):** Laravel Reverb (websockets, servidor propio en EC2) o *polling* cada pocos segundos. Reverb es lo correcto; *polling* es más simple de desplegar.
-2. **Verificación del cliente:** ¿el cliente queda bloqueado para reservar hasta que un admin lo apruebe, o puede reservar mientras está `pending`? HU013 dice "limita acciones críticas según el rol".
-3. **Precio de la reserva:** ¿`agreed_price` lo fija el precio del servicio al crear la reserva, o el profesional puede ajustarlo al aceptar?
+| # | Tema | Decisión | Impacto en el modelo |
+|---|------|----------|----------------------|
+| N1 | Chat en tiempo real (HU011, HU041) | **Laravel Reverb** (WebSockets), para tener tiempo real y una arquitectura preparada para crecer. | `messages` se transmite por canal privado `booking.{id}`; `last_seen_at` se complementa con canales de presencia. Requiere broadcasting y un worker de colas. |
+| N2 | Verificación del cliente (HU013) | El cliente puede registrarse y explorar sin verificar, pero **debe estar verificado (`approved`) para crear una reserva**. | Regla en la policy de creación de `bookings` sobre `users.verification_status`. |
+| N3 | Precio de la reserva | Lo establece **el profesional en cada servicio**. | Al crear la reserva, `bookings.agreed_price` guarda una copia del `professional_services.price` vigente, para que un cambio posterior de precio no altere reservas existentes. |

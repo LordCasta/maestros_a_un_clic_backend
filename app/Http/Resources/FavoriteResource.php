@@ -2,18 +2,21 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Favorite;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Favorite
+ */
 class FavoriteResource extends JsonResource
 {
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
-            'client_id' => $this->client_id,
             'professional' => new ProfessionalResource($this->whenLoaded('professional')),
-            'created_at' => $this->created_at,
+            'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
 }
-

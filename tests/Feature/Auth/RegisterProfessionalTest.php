@@ -1,117 +1,64 @@
 <?php
 
-use App\Models\ProfessionalProfile;
-use App\Models\Specialty;
+use App\Enums\Role;
+use App\Models\Category;
+use App\Models\Commune;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 
-uses(RefreshDatabase::class);
+function professionalPayload(array $overrides = []): array
+{
+    $commune = Commune::firstOrCreate(
+        ['code' => '11'],
+        ['name' => 'Laureles-Estadio', 'type' => 'comuna', 'latitude' => 6.25, 'longitude' => -75.59],
+    );
 
-it('registers a professional with specialties certificates and portfolio files', function () {
-    Storage::fake('public');
-
-    $specialties = Specialty::factory()->count(2)->create();
-
-    $response = $this->withHeaders(['Accept' => 'application/json'])->post('/api/auth/register/professional', [
-        'name' => 'Profesional Prueba',
-        'email' => 'profesional@example.com',
+    return [
+        'name' => 'Juan Castaño',
+        'email' => 'juan@example.com',
         'password' => 'password123',
         'password_confirmation' => 'password123',
-        'phone' => '+56911112222',
-        'commune' => 'Santiago Centro',
-        'latitude' => -33.4489,
-        'longitude' => -70.6693,
-        'profile_photo' => UploadedFile::fake()->image('profile.jpg'),
-        'specialties' => $specialties->pluck('id')->all(),
-        'hourly_rate' => 25000,
-        'experience_years' => 7,
-        'description' => 'Profesional con más de siete años de experiencia realizando trabajos de alta calidad en el hogar y ofreciendo atención responsable y puntual.',
-        'certificates' => [
-            UploadedFile::fake()->create('certificado-1.pdf', 200, 'application/pdf'),
-            UploadedFile::fake()->create('certificado-2.pdf', 200, 'application/pdf'),
-        ],
-        'portfolio_images' => [
-            UploadedFile::fake()->image('portfolio-1.jpg'),
-            UploadedFile::fake()->image('portfolio-2.jpg'),
-        ],
-    ]);
+        'commune_id' => $commune->id,
+        'description' => 'Plomero con más de diez años de experiencia en instalaciones, reparaciones y mantenimiento del hogar.',
+        'experience_years' => 10,
+        'hourly_rate' => 45000,
+        'category_ids' => Category::factory()->count(2)->create()->pluck('id')->all(),
+        ...$overrides,
+    ];
+}
 
-    $response->assertCreated()
-        ->assertJson([
-            'success' => true,
-            'message' => 'Profesional registrado',
-        ])
+it('registers a professional with profile and categories', function () {
+    $payload = professionalPayload();
+
+    $this->postJson('/api/v1/auth/register/professional', $payload)
+        ->assertCreated()
         ->assertJsonPath('data.user.role', 'professional')
-        ->assertJsonStructure([
-            'success',
-            'message',
-            'data' => [
-                'user' => [
-                    'id',
-                    'name',
-                    'email',
-                    'phone',
-                    'avatar',
-                    'role',
-                    'commune',
-                    'is_verified',
-                    'created_at',
-                ],
-                'token',
-            ],
-        ]);
+        ->assertJsonPath('data.user.verification_status', 'unverified');
 
-    $user = User::where('email', 'profesional@example.com')->firstOrFail();
-    $profile = ProfessionalProfile::where('user_id', $user->id)->firstOrFail();
+    $user = User::where('email', 'juan@example.com')->firstOrFail();
+    $profile = $user->professionalProfile;
 
-    $this->assertDatabaseHas('users', [
-        'email' => 'profesional@example.com',
-        'role' => 'professional',
-        'commune' => 'Santiago Centro',
-    ]);
+    expect($user->role)->toBe(Role::Professional)
+        ->and($profile->experience_years)->toBe(10)
+        ->and((float) $profile->hourly_rate)->toBe(45000.0)
+        ->and($profile->categories->pluck('id')->all())->toEqualCanonicalizing($payload['category_ids']);
+});
 
-    $this->assertDatabaseHas('professional_profiles', [
-        'user_id' => $user->id,
-        'experience_years' => 7,
-    ]);
+it('only accepts root categories as specialties', function () {
+    $subcategory = Category::factory()->create(['parent_id' => Category::factory()]);
 
-    foreach ($specialties as $specialty) {
-        $this->assertDatabaseHas('professional_specialty', [
-            'professional_profile_id' => $profile->id,
-            'specialty_id' => $specialty->id,
-        ]);
-    }
+    $this->postJson('/api/v1/auth/register/professional', professionalPayload(['category_ids' => [$subcategory->id]]))
+        ->assertJsonValidationErrors(['category_ids.0']);
+});
 
-    $this->assertDatabaseCount('certificates', 2);
-    $this->assertDatabaseCount('portfolio_items', 2);
-
-    Storage::disk('public')->assertExists($user->avatar);
-
-    foreach ($profile->certificates as $certificate) {
-        Storage::disk('public')->assertExists($certificate->file_path);
-    }
-
-    foreach ($profile->portfolioItems as $item) {
-        Storage::disk('public')->assertExists($item->image_path);
-    }
+it('requires a positive hourly rate', function () {
+    $this->postJson('/api/v1/auth/register/professional', professionalPayload(['hourly_rate' => 0]))
+        ->assertJsonValidationErrors(['hourly_rate']);
 });
 
 it('validates required fields for professional registration', function () {
-    $response = $this->withHeaders(['Accept' => 'application/json'])->post('/api/auth/register/professional', [
-        'email' => 'invalid-email',
-    ]);
-
-    $response->assertStatus(422)
+    $this->postJson('/api/v1/auth/register/professional', ['email' => 'invalid-email'])
+        ->assertUnprocessable()
         ->assertJsonValidationErrors([
-            'name',
-            'email',
-            'password',
-            'specialties',
-            'experience_years',
-            'description',
+            'name', 'email', 'password', 'commune_id', 'description', 'experience_years', 'hourly_rate', 'category_ids',
         ]);
 });
-
-

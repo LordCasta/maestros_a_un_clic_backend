@@ -1,59 +1,79 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Maestros a un clic — Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+API REST del marketplace que conecta clientes con maestros y profesionales del hogar en Medellín: búsqueda por comuna y especialidad, reservas con agenda, verificación de identidad, chat en tiempo real y calificación recíproca.
 
-## About Laravel
+Laravel 12 · PHP 8.2+ · MySQL 8 · Sanctum · Reverb · Pest
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+Frontend: [maestros_a_un_clic_frontend](https://github.com/LordCasta/maestros_a_un_clic_frontend)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Documentación
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Documento | Contenido |
+|-----------|-----------|
+| [docs/guia-de-trabajo.md](docs/guia-de-trabajo.md) | **Empieza aquí:** instalación y paso a paso de un issue hasta `main` |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Reglas del trabajo en equipo: ramas, commits, pull requests, asistentes de IA |
+| [docs/arquitectura.md](docs/arquitectura.md) | Capas, reglas y checklist para agregar un módulo. **Leer antes de programar.** |
+| [docs/modelo-de-datos.md](docs/modelo-de-datos.md) | Diagrama ER, máquina de estados de la reserva, decisiones y trazabilidad con las HU |
+| [docs/api/convenciones.md](docs/api/convenciones.md) | Formato de respuestas y errores, tipos, enums |
+| [docs/api/endpoints.md](docs/api/endpoints.md) | Endpoints implementados y planeados por módulo |
+| [docs/tiempo-real.md](docs/tiempo-real.md) | Reverb: canales, eventos y conexión desde el frontend |
+| `/docs/api` | Documentación interactiva generada desde el código (solo en local) |
 
-## Learning Laravel
+## Instalación local
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+Requisitos: PHP 8.2+ con `pdo_mysql` y `pdo_sqlite`, Composer, MySQL 8 y Node.js (solo para `composer dev`).
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. Crea la base de datos `maestros_backend` en MySQL.
+2. Instala y configura:
 
-## Laravel Sponsors
+   ```bash
+   composer install
+   cp .env.example .env
+   php artisan key:generate
+   ```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+3. Ajusta `DB_USERNAME` / `DB_PASSWORD` en `.env`.
+4. Crea el esquema con datos demo:
 
-### Premium Partners
+   ```bash
+   php artisan migrate:fresh --seed   # esquema + comunas + categorías + datos demo
+   php artisan storage:link           # sirve avatares y portafolio en /storage
+   ```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+   > `migrate:fresh` **borra todas las tablas** de la base configurada en `.env`. Úsalo solo en tu base local.
 
-## Contributing
+5. Levanta todo:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+   ```bash
+   composer dev
+   ```
 
-## Code of Conduct
+   | Proceso | URL |
+   |---------|-----|
+   | API | `http://127.0.0.1:8000/api/v1` |
+   | Docs interactivas | `http://127.0.0.1:8000/docs/api` |
+   | Reverb (WebSockets) | `ws://localhost:8080` |
+   | Cola | procesa eventos en segundo plano |
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Cuentas demo
 
-## Security Vulnerabilities
+Todas con contraseña `password`:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+| Correo | Rol | Para probar |
+|--------|-----|-------------|
+| `admin@maestros.test` | Administrador | Panel de admin |
+| `cliente@maestros.test` | Cliente verificado | Reservas en varios estados, favoritos |
+| `pendiente@maestros.test` | Cliente sin verificar | Bloqueo de reservas por verificación |
+| `profesional@maestros.test` | Profesional verificado | Servicios, agenda, reservas recibidas |
 
-## License
+Además hay 12 profesionales verificados más y 2 pendientes de verificación, repartidos por comunas.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Tests, formato y seguridad
+
+```bash
+php artisan test          # SQLite en memoria: no toca tu base MySQL
+vendor/bin/pint --dirty   # formatea los archivos que cambiaste
+composer audit            # alertas de seguridad en dependencias
+```
+
+GitHub Actions corre los tres en cada pull request. Un cambio no se integra si alguno falla.

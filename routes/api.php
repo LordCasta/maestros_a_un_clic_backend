@@ -1,38 +1,52 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\ProfessionalController;
-use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\BookingController;
-use App\Http\Controllers\Api\ClientDashboardController;
+use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\Api\ProfessionalController;
+use Illuminate\Support\Facades\Route;
 
-Route::prefix('auth')->group(function(){
-    Route::post('register/client', [AuthController::class,'registerClient']);
-    Route::post('register/professional', [AuthController::class,'registerProfessional']);
-    Route::post('login', [AuthController::class,'login'])->middleware('throttle:10,1');
-    Route::post('logout', [AuthController::class,'logout'])->middleware('auth:sanctum');
-    Route::get('me', [AuthController::class,'me'])->middleware('auth:sanctum');
+/*
+|--------------------------------------------------------------------------
+| API v1 — prefijo /api/v1 (bootstrap/app.php)
+|--------------------------------------------------------------------------
+| Permisos: `role:` en la ruta decide QUIÉN puede entrar (tipo de cuenta);
+| las Policies deciden sobre QUÉ recurso (dueño, estado). Ver docs/arquitectura.md.
+*/
+
+// Autenticación
+Route::prefix('auth')->group(function () {
+    Route::middleware('throttle:10,1')->group(function () {
+        Route::post('register/client', [AuthController::class, 'registerClient']);
+        Route::post('register/professional', [AuthController::class, 'registerProfessional']);
+        Route::post('login', [AuthController::class, 'login']);
+    });
+
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::post('logout', [AuthController::class, 'logout']);
+        Route::get('me', [AuthController::class, 'me'])->middleware('not_blocked');
+    });
 });
 
-Route::get('professionals', [ProfessionalController::class,'index']);
-Route::get('professionals/{id}', [ProfessionalController::class,'show']);
+// Catálogos y búsqueda pública
+Route::get('communes', [CatalogController::class, 'communes']);
+Route::get('categories', [CatalogController::class, 'categories']);
+Route::get('professionals', [ProfessionalController::class, 'index']);
+Route::get('professionals/{id}', [ProfessionalController::class, 'show'])->whereNumber('id');
 
-Route::middleware('auth:sanctum')->group(function(){
-    // uploads
-    Route::post('uploads', [\App\Http\Controllers\Api\UploadController::class, 'store']);
-    // favorites
-    Route::get('favorites', [FavoriteController::class,'index']);
-    Route::post('favorites/{professional}', [FavoriteController::class,'store']);
-    Route::delete('favorites/{professional}', [FavoriteController::class,'destroy']);
+// Rutas autenticadas
+Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
+    // Favoritos (solo clientes)
+    Route::middleware('role:client')->group(function () {
+        Route::get('favorites', [FavoriteController::class, 'index']);
+        Route::post('favorites/{professionalId}', [FavoriteController::class, 'store'])->whereNumber('professionalId');
+        Route::delete('favorites/{professionalId}', [FavoriteController::class, 'destroy'])->whereNumber('professionalId');
+    });
 
-    // bookings
-    Route::post('bookings', [BookingController::class,'store']);
-    Route::get('bookings', [BookingController::class,'index']);
-    Route::get('bookings/{id}', [BookingController::class,'show']);
-    Route::post('bookings/{id}/cancel', [BookingController::class,'cancel']);
-
-    // dashboard
-    Route::get('client/dashboard', [ClientDashboardController::class,'index']);
+    // Reservas
+    Route::get('bookings', [BookingController::class, 'index']);
+    Route::post('bookings', [BookingController::class, 'store']);
+    Route::get('bookings/{booking}', [BookingController::class, 'show']);
+    Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel']);
 });

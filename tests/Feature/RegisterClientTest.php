@@ -1,83 +1,60 @@
 <?php
 
+use App\Enums\Role;
+use App\Enums\VerificationStatus;
+use App\Models\Commune;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
-uses(RefreshDatabase::class);
-
-it('registers a client with multipart form data', function () {
+it('registers a client and returns a session', function () {
     Storage::fake('public');
+    $commune = Commune::create(['name' => 'El Poblado', 'code' => '14', 'type' => 'comuna', 'latitude' => 6.2, 'longitude' => -75.5]);
 
-    $response = $this->withHeaders(['Accept' => 'application/json'])->post('/api/auth/register/client', [
-        'name' => 'Juan Cliente',
-        'email' => 'juancliente@example.com',
+    $response = $this->postJson('/api/v1/auth/register/client', [
+        'name' => 'Camila Restrepo',
+        'email' => 'camila@example.com',
         'password' => 'password123',
         'password_confirmation' => 'password123',
-        'commune' => 'Santiago',
-        'latitude' => -33.4489,
-        'longitude' => -70.6693,
-        'phone' => '+56911112222',
-        'selfie' => UploadedFile::fake()->image('selfie.jpg'),
-        'document' => UploadedFile::fake()->create('document.pdf', 500, 'application/pdf'),
+        'phone' => '3001112233',
+        'commune_id' => $commune->id,
+        'address' => 'Calle 10 # 43-20',
+        'avatar' => UploadedFile::fake()->image('avatar.jpg'),
     ]);
 
     $response->assertCreated()
-        ->assertJson([
-            'success' => true,
-            'message' => 'Usuario registrado',
-        ])
+        ->assertJson(['success' => true, 'message' => 'Cuenta creada.'])
         ->assertJsonPath('data.user.role', 'client')
-        ->assertJsonStructure([
-            'success',
-            'message',
-            'data' => [
-                'user' => [
-                    'id',
-                    'name',
-                    'email',
-                    'phone',
-                    'avatar',
-                    'role',
-                    'commune',
-                    'is_verified',
-                    'created_at',
-                ],
-                'token',
-            ],
-        ]);
+        ->assertJsonPath('data.user.verification_status', 'unverified')
+        ->assertJsonPath('data.user.commune.name', 'El Poblado')
+        ->assertJsonStructure(['data' => ['user', 'token']]);
 
-    $this->assertDatabaseHas('users', [
-        'email' => 'juancliente@example.com',
-        'role' => 'client',
-        'commune' => 'Santiago',
-    ]);
+    $user = User::where('email', 'camila@example.com')->firstOrFail();
 
-    $user = User::where('email', 'juancliente@example.com')->firstOrFail();
+    expect($user->role)->toBe(Role::Client)
+        ->and($user->verification_status)->toBe(VerificationStatus::Unverified)
+        ->and(Hash::check('password123', $user->password))->toBeTrue()
+        ->and($user->clientProfile)->not->toBeNull();
 
-    expect(Hash::check('password123', $user->password))->toBeTrue();
-
-    $this->assertDatabaseHas('client_profiles', [
-        'user_id' => $user->id,
-    ]);
-
-    Storage::disk('public')->assertExists($user->clientProfile->selfie_path);
-    Storage::disk('public')->assertExists($user->clientProfile->document_path);
+    Storage::disk('public')->assertExists($user->avatar_path);
 });
 
-it('validates required fields for client registration', function () {
-    $response = $this->withHeaders(['Accept' => 'application/json'])->post('/api/auth/register/client', [
-        'email' => 'invalid-email',
-    ]);
+it('validates required fields with the standard error format', function () {
+    $this->postJson('/api/v1/auth/register/client', ['email' => 'invalid-email'])
+        ->assertUnprocessable()
+        ->assertJsonPath('success', false)
+        ->assertJsonPath('message', 'Los datos enviados no son válidos.')
+        ->assertJsonValidationErrors(['name', 'email', 'password']);
+});
 
-    $response->assertStatus(422)
-        ->assertJsonValidationErrors([
-            'name',
-            'email',
-            'password',
-            'selfie',
-            'document',
-        ]);
+it('rejects a duplicated email', function () {
+    User::factory()->create(['email' => 'camila@example.com']);
+
+    $this->postJson('/api/v1/auth/register/client', [
+        'name' => 'Otra Camila',
+        'email' => 'camila@example.com',
+        'password' => 'password123',
+        'password_confirmation' => 'password123',
+    ])->assertJsonValidationErrors(['email']);
 });

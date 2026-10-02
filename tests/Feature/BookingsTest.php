@@ -1,80 +1,158 @@
 <?php
 
+use App\Enums\BookingStatus;
 use App\Models\Booking;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Laravel\Sanctum\Sanctum;
 
-uses(RefreshDatabase::class);
+function bookingPayload(int $serviceId, ?Carbon $startsAt = null): array
+{
+    return [
+        'professional_service_id' => $serviceId,
+        'starts_at' => ($startsAt ?? Carbon::tomorrow()->setTime(10, 0))->toIso8601String(),
+        'description' => 'Se está saliendo el agua debajo del lavaplatos.',
+        'address' => 'Calle 10 # 43-20',
+    ];
+}
 
-it('creates a booking for the authenticated client', function () {
-    $client = User::factory()->create(['role' => 'client']);
-    $professional = User::factory()->create(['role' => 'professional']);
+describe('creating a booking', function () {
+    it('lets a verified client book a service', function () {
+        [$professional, $service] = professionalWithService(['price' => 80000, 'estimated_duration_minutes' => 120]);
+        $client = User::factory()->client()->verified()->create();
+        Sanctum::actingAs($client);
 
-    $token = $client->createToken('api-token')->plainTextToken;
+        $response = $this->postJson('/api/v1/bookings', bookingPayload($service->id, Carbon::tomorrow()->setTime(10, 0)));
 
-    $response = $this->withToken($token)->postJson('/api/bookings', [
-        'professional_id' => $professional->id,
-        'service_description' => 'Necesito instalación y revisión de grifería en cocina.',
-        'scheduled_date' => now()->addDay()->toDateTimeString(),
-        'total' => 45000,
-    ]);
+        $response->assertCreated()
+            ->assertJsonPath('data.status', 'pending')
+            ->assertJsonPath('data.agreed_price', 80000)
+            ->assertJsonPath('data.professional.id', $professional->id)
+            ->assertJsonPath('data.client.id', $client->id);
 
-    $response->assertCreated()
-        ->assertJson([
-            'success' => true,
-        ])
-        ->assertJsonPath('data.client_id', $client->id)
-        ->assertJsonPath('data.professional_id', $professional->id)
-        ->assertJsonPath('data.status', 'pending');
+        $booking = Booking::firstOrFail();
 
-    $this->assertDatabaseHas('bookings', [
-        'client_id' => $client->id,
-        'professional_id' => $professional->id,
-        'status' => 'pending',
-    ]);
+        expect($booking->ends_at->equalTo($booking->starts_at->copy()->addMinutes(120)))->toBeTrue()
+            ->and($booking->statusChanges()->count())->toBe(1);
+    });
+
+    it('stores the time in Colombia even if the client sends it in UTC', function () {
+        [, $service] = professionalWithService();
+        Sanctum::actingAs(User::factory()->client()->verified()->create());
+
+        $utc = Carbon::tomorrow('UTC')->setTime(15, 0); // 10:00 en Colombia
+        $payload = ['starts_at' => $utc->format('Y-m-d\TH:i:s\Z')] + bookingPayload($service->id);
+
+        $this->postJson('/api/v1/bookings', $payload)
+            ->assertCreated()
+            ->assertJsonPath('data.starts_at', $utc->copy()->setTimezone('America/Bogota')->toIso8601String());
+
+        expect(Booking::firstOrFail()->starts_at->format('H:i'))->toBe('10:00');
+    });
+
+    it('keeps the agreed price when the professional changes the service price later', function () {
+        [, $service] = professionalWithService(['price' => 80000]);
+        Sanctum::actingAs(User::factory()->client()->verified()->create());
+
+        $this->postJson('/api/v1/bookings', bookingPayload($service->id))->assertCreated();
+        $service->update(['price' => 120000]);
+
+        expect((float) Booking::firstOrFail()->agreed_price)->toBe(80000.0);
+    });
+
+    it('requires the client to be verified', function () {
+        [, $service] = professionalWithService();
+        Sanctum::actingAs(User::factory()->client()->create());
+
+        $this->postJson('/api/v1/bookings', bookingPayload($service->id))
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Debes verificar tu identidad antes de hacer una reserva.');
+    });
+
+    it('does not let a professional create bookings', function () {
+        [, $service] = professionalWithService();
+        Sanctum::actingAs(User::factory()->professional()->verified()->create());
+
+        $this->postJson('/api/v1/bookings', bookingPayload($service->id))->assertForbidden();
+    });
+
+    it('rejects a slot that overlaps another booking including the rest time', function () {
+        [, $service] = professionalWithService(['estimated_duration_minutes' => 60]);
+        $service->professionalProfile->update(['buffer_minutes' => 30]);
+        Sanctum::actingAs(User::factory()->client()->verified()->create());
+
+        $this->postJson('/api/v1/bookings', bookingPayload($service->id, Carbon::tomorrow()->setTime(10, 0)))->assertCreated();
+
+        // Termina 11:00 + 30 min de descanso: 11:15 se cruza, 11:30 no.
+        $this->postJson('/api/v1/bookings', bookingPayload($service->id, Carbon::tomorrow()->setTime(11, 15)))->assertConflict();
+        $this->postJson('/api/v1/bookings', bookingPayload($service->id, Carbon::tomorrow()->setTime(11, 30)))->assertCreated();
+    });
+
+    it('rejects inactive services', function () {
+        [, $service] = professionalWithService(['is_active' => false]);
+        Sanctum::actingAs(User::factory()->client()->verified()->create());
+
+        $this->postJson('/api/v1/bookings', bookingPayload($service->id))
+            ->assertJsonValidationErrors(['professional_service_id']);
+    });
 });
 
-it('lists client bookings when authenticated as client', function () {
-    $client = User::factory()->create(['role' => 'client']);
-    $professional = User::factory()->create(['role' => 'professional']);
+describe('listing and viewing bookings', function () {
+    it('lists only the bookings of the authenticated user by role', function () {
+        $mine = Booking::factory()->create();
+        Booking::factory()->create();
 
-    Booking::create([
-        'client_id' => $client->id,
-        'professional_id' => $professional->id,
-        'service_description' => 'Servicio de prueba',
-        'scheduled_date' => now()->addDay(),
-        'status' => 'confirmed',
-        'total' => 50000,
-    ]);
+        Sanctum::actingAs($mine->client);
+        $this->getJson('/api/v1/bookings')
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $mine->id)
+            ->assertJsonPath('meta.total', 1);
 
-    $token = $client->createToken('api-token')->plainTextToken;
+        Sanctum::actingAs($mine->professional);
+        $this->getJson('/api/v1/bookings')
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.id', $mine->id);
+    });
 
-    $response = $this->withToken($token)->getJson('/api/bookings');
+    it('forbids viewing a booking of someone else', function () {
+        $booking = Booking::factory()->create();
+        Sanctum::actingAs(User::factory()->client()->verified()->create());
 
-    $response->assertOk()
-        ->assertJsonPath('data.0.client_id', $client->id)
-        ->assertJsonPath('data.0.professional_id', $professional->id);
+        $this->getJson("/api/v1/bookings/{$booking->id}")->assertForbidden();
+    });
 });
 
-it('lists professional bookings when authenticated as professional', function () {
-    $client = User::factory()->create(['role' => 'client']);
-    $professional = User::factory()->create(['role' => 'professional']);
+describe('cancelling a booking', function () {
+    it('cancels with a reason and records the change', function () {
+        $booking = Booking::factory()->create();
+        Sanctum::actingAs($booking->professional);
 
-    Booking::create([
-        'client_id' => $client->id,
-        'professional_id' => $professional->id,
-        'service_description' => 'Servicio de prueba profesional',
-        'scheduled_date' => now()->addDay(),
-        'status' => 'confirmed',
-        'total' => 75000,
-    ]);
+        $this->postJson("/api/v1/bookings/{$booking->id}/cancel", ['reason' => 'Tengo una emergencia familiar.'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'cancelled');
 
-    $token = $professional->createToken('api-token')->plainTextToken;
+        $this->assertDatabaseHas('booking_status_changes', [
+            'booking_id' => $booking->id,
+            'from_status' => 'pending',
+            'to_status' => 'cancelled',
+            'reason' => 'Tengo una emergencia familiar.',
+        ]);
+    });
 
-    $response = $this->withToken($token)->getJson('/api/bookings');
+    it('requires a reason', function () {
+        $booking = Booking::factory()->create();
+        Sanctum::actingAs($booking->client);
 
-    $response->assertOk()
-        ->assertJsonPath('data.0.professional_id', $professional->id)
-        ->assertJsonPath('data.0.client_id', $client->id);
+        $this->postJson("/api/v1/bookings/{$booking->id}/cancel")->assertJsonValidationErrors(['reason']);
+    });
+
+    it('does not cancel a completed booking', function () {
+        $booking = Booking::factory()->status(BookingStatus::Completed)->create();
+        Sanctum::actingAs($booking->client);
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/cancel", ['reason' => 'Ya no lo necesito.'])
+            ->assertConflict()
+            ->assertJsonPath('success', false);
+    });
 });
-

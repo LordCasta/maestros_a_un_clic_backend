@@ -6,27 +6,31 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('phone')->nullable();
-            $table->string('avatar')->nullable();
-            // role: client|professional|admin
-            $table->enum('role', ['client', 'professional', 'admin'])->default('client');
+            $table->string('phone', 30)->nullable();
+            $table->string('avatar_path')->nullable();
+            $table->string('role', 20)->default('client')->index();
+            $table->foreignId('commune_id')->nullable()->constrained('communes')->nullOnDelete();
+            $table->string('address')->nullable();
             $table->decimal('latitude', 10, 7)->nullable();
             $table->decimal('longitude', 10, 7)->nullable();
-            $table->string('commune')->nullable();
-            $table->boolean('is_verified')->default(false);
+            $table->string('verification_status', 20)->default('unverified')->index();
+            $table->decimal('rating_avg', 3, 2)->default(0);
+            $table->unsignedInteger('rating_count')->default(0);
+            $table->timestamp('last_seen_at')->nullable();
+            $table->timestamp('blocked_at')->nullable();
+            $table->string('blocked_reason')->nullable();
+            $table->foreignId('blocked_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -45,9 +49,6 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('users');
