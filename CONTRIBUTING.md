@@ -101,3 +101,21 @@ Una HU está lista cuando:
 - [ ] Documentación de la API actualizada.
 - [ ] Revisada y aprobada por la otra persona.
 - [ ] Fusionada en `main` en los dos repos.
+
+## 8. Trabajo con asistentes de IA
+
+Cada uno usa la herramienta que prefiera (Antigravity, Claude Code…). En este repo:
+
+| Archivo | Quién lo lee | Cómo se mantiene |
+|---------|--------------|------------------|
+| `AGENTS.md` | Antigravity, Codex, Cursor (siempre activo) | **Generado** por Laravel Boost |
+| `CLAUDE.md` | Claude Code | **Generado** por Laravel Boost |
+| `.ai/guidelines/maestros-a-un-clic.md` | Fuente de las reglas del proyecto dentro de los dos anteriores | Se edita a mano |
+| `.claude/skills/` | Claude Code | Skills oficiales de Boost (Laravel, testing) |
+| `.mcp.json` | Asistentes con MCP | Servidor de Laravel Boost: rutas, esquema de BD y documentación de la versión instalada |
+
+Reglas:
+- **No edites `AGENTS.md` ni `CLAUDE.md` a mano**: se regeneran. Cambia `.ai/guidelines/maestros-a-un-clic.md` y corre `php artisan boost:update` (también corre solo tras `composer update`). Haz el cambio en un PR que revisen los dos.
+- **El asistente corre `php artisan test` y `vendor/bin/pint --dirty`** antes de dar algo por terminado.
+- **Un PR hecho con IA se revisa igual que cualquier otro.** Quien lo abre responde por el código.
+- En el frontend, `AGENTS.md` se edita a mano y hay reglas de diseño y skills propias: ver su `CONTRIBUTING.md`.
