@@ -1,6 +1,12 @@
-## Qué cierra
+## Issue
 
-Closes #<!-- número del issue de la HU -->
+<!--
+Si la HU también tiene parte de frontend, usa "Refs": el PR del frontend es el que cierra el issue.
+Si la HU es solo de backend, cambia "Refs" por "Closes".
+-->
+Refs #<!-- número del issue de la HU -->
+
+PR del frontend relacionado: <!-- enlace, si aplica -->
 
 ## Qué cambió
 

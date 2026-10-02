@@ -2,6 +2,8 @@
 
 Reglas para desarrollar en paralelo sin pisarnos. Aplican igual en el repo del frontend.
 
+**¿Primera vez?** Empieza por la [guía de trabajo](docs/guia-de-trabajo.md): instalación y el paso a paso de un issue hasta `main`, con los comandos.
+
 ## 1. Reparto por módulos
 
 Cada módulo tiene **un responsable** que lo hace completo: backend, frontend, tests y documentación. Los módulos y sus endpoints están en [docs/api/endpoints.md](docs/api/endpoints.md) (Parte 2).
@@ -33,7 +35,7 @@ Si necesitas tocar código de un módulo ajeno, avisa al responsable antes.
 ## 2. Tareas
 
 - Cada historia de usuario (HU) es un **issue de este repo** (también para el trabajo del frontend), con la etiqueta de su módulo. Las HU que avanzaron en la fase 0 tienen la etiqueta `fase 0: parcial` y dicen qué falta.
-- Un PR del frontend cierra el issue con `Closes LordCasta/maestros_a_un_clic_backend#N`.
+- El PR del backend **referencia** el issue (`Refs #N`) y el del frontend lo **cierra** (`Closes LordCasta/maestros_a_un_clic_backend#N`), así el issue no se cierra con la mitad hecha. Si la HU es solo de backend, ese PR usa `Closes #N`.
 - El tablero del proyecto muestra quién tiene qué y en qué estado va.
 - Una rama y un pull request por HU (o por un grupo pequeño de HU muy relacionadas).
 

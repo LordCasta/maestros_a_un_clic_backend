@@ -10,7 +10,8 @@ Frontend: [maestros_a_un_clic_frontend](https://github.com/LordCasta/maestros_a_
 
 | Documento | Contenido |
 |-----------|-----------|
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Flujo de trabajo en equipo: ramas, commits, pull requests. |
+| [docs/guia-de-trabajo.md](docs/guia-de-trabajo.md) | **Empieza aquí:** instalación y paso a paso de un issue hasta `main` |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Reglas del trabajo en equipo: ramas, commits, pull requests, asistentes de IA |
 | [docs/arquitectura.md](docs/arquitectura.md) | Capas, reglas y checklist para agregar un módulo. **Leer antes de programar.** |
 | [docs/modelo-de-datos.md](docs/modelo-de-datos.md) | Diagrama ER, máquina de estados de la reserva, decisiones y trazabilidad con las HU |
 | [docs/api/convenciones.md](docs/api/convenciones.md) | Formato de respuestas y errores, tipos, enums |
