@@ -2,107 +2,99 @@
 
 namespace App\Services;
 
+use App\Enums\Role;
 use App\Models\User;
-use App\Models\ClientProfile;
-use App\Models\ProfessionalProfile;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class AuthService
 {
-    protected UploadService $uploader;
+    public function __construct(private readonly UploadService $uploads) {}
 
-    public function __construct(UploadService $uploader)
-    {
-        $this->uploader = $uploader;
-    }
-
+    /**
+     * @param  array<string, mixed>  $data  Datos validados por RegisterClientRequest.
+     */
     public function registerClient(array $data): User
     {
-        // create user
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'phone' => $data['phone'] ?? null,
-            'role' => 'client',
-            'commune' => $data['commune'] ?? null,
-            'latitude' => $data['latitude'] ?? null,
-            'longitude' => $data['longitude'] ?? null,
-        ]);
+        return $this->withAvatar($data['avatar'] ?? null, function (?string $avatarPath) use ($data) {
+            $user = User::create([
+                ...Arr::only($data, ['name', 'email', 'password', 'phone', 'commune_id', 'address', 'latitude', 'longitude']),
+                'role' => Role::Client,
+                'avatar_path' => $avatarPath,
+            ]);
 
-        // store files
-        $clientProfile = new ClientProfile();
-        $clientProfile->user_id = $user->id;
+            $user->clientProfile()->create(['birth_date' => $data['birth_date'] ?? null]);
 
-        if (!empty($data['selfie'])) {
-            $clientProfile->selfie_path = $this->uploader->store($data['selfie'], 'selfies');
-        }
-
-        if (!empty($data['document'])) {
-            $clientProfile->document_path = $this->uploader->store($data['document'], 'documents');
-        }
-
-        $clientProfile->address = $data['address'] ?? null;
-        $clientProfile->birth_date = $data['birth_date'] ?? null;
-        $clientProfile->save();
-
-        return $user;
+            // refresh() trae los valores por defecto de la BD (verification_status, rating_*).
+            return $user->refresh();
+        });
     }
 
+    /**
+     * @param  array<string, mixed>  $data  Datos validados por RegisterProfessionalRequest.
+     */
     public function registerProfessional(array $data): User
     {
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-            'phone' => $data['phone'] ?? null,
-            'role' => 'professional',
-            'commune' => $data['commune'] ?? null,
-            'latitude' => $data['latitude'] ?? null,
-            'longitude' => $data['longitude'] ?? null,
-        ]);
+        return $this->withAvatar($data['avatar'] ?? null, function (?string $avatarPath) use ($data) {
+            $user = User::create([
+                ...Arr::only($data, ['name', 'email', 'password', 'phone', 'commune_id', 'address', 'latitude', 'longitude']),
+                'role' => Role::Professional,
+                'avatar_path' => $avatarPath,
+            ]);
 
-        $profile = ProfessionalProfile::create([
-            'user_id' => $user->id,
-            'description' => $data['description'] ?? null,
-            'experience_years' => $data['experience_years'] ?? 0,
-            'hourly_rate' => $data['hourly_rate'] ?? null,
-            'commune' => $data['commune'] ?? null,
-        ]);
+            $profile = $user->professionalProfile()->create(
+                Arr::only($data, ['description', 'experience_years', 'hourly_rate']),
+            );
+            $profile->categories()->sync($data['category_ids']);
 
-        // profile photo
-        if (!empty($data['profile_photo'])) {
-            $user->avatar = $this->uploader->store($data['profile_photo'], 'profiles');
-            $user->save();
+            return $user->refresh();
+        });
+    }
+
+    /**
+     * Devuelve el token, o null si las credenciales no son válidas.
+     *
+     * @param  array{email: string, password: string}  $credentials
+     * @return array{user: User, token: string}|null
+     */
+    public function login(array $credentials): ?array
+    {
+        if (! Auth::guard('web')->once($credentials)) {
+            return null;
         }
 
-        // attach specialties
-        if (!empty($data['specialties']) && is_array($data['specialties'])) {
-            $profile->specialties()->sync($data['specialties']);
-        }
+        /** @var User $user */
+        $user = Auth::guard('web')->user();
 
-        // certificates
-        if (!empty($data['certificates']) && is_array($data['certificates'])) {
-            foreach ($data['certificates'] as $cert) {
-                $profile->certificates()->create([
-                    'file_path' => $this->uploader->store($cert, 'certificates'),
-                    'title' => null,
-                ]);
+        abort_if($user->isBlocked(), 403, 'Tu cuenta está bloqueada. Contacta a soporte.');
+
+        return [
+            'user' => $user,
+            'token' => $user->createToken('api-token')->plainTextToken,
+        ];
+    }
+
+    /**
+     * Crea el usuario en una transacción. Si algo falla, borra el avatar ya subido
+     * para no dejar archivos huérfanos.
+     *
+     * @param  callable(?string): User  $create
+     */
+    private function withAvatar(?UploadedFile $avatar, callable $create): User
+    {
+        $avatarPath = $avatar ? $this->uploads->storePublic($avatar, 'avatars') : null;
+
+        try {
+            return DB::transaction(fn () => $create($avatarPath));
+        } catch (Throwable $e) {
+            if ($avatarPath) {
+                $this->uploads->deletePublic($avatarPath);
             }
-        }
 
-        // portfolio
-        if (!empty($data['portfolio_images']) && is_array($data['portfolio_images'])) {
-            foreach ($data['portfolio_images'] as $img) {
-                $profile->portfolioItems()->create([
-                    'image_path' => $this->uploader->store($img, 'portfolio'),
-                ]);
-            }
+            throw $e;
         }
-
-        return $user;
     }
 }
-
-

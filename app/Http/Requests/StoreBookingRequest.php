@@ -4,21 +4,25 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * HU004. El profesional, el precio y la hora de fin se derivan del servicio.
+ * Quién puede reservar lo decide BookingPolicy::create, no este request.
+ */
 class StoreBookingRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user() !== null && $this->user()->role === 'client';
+        return true;
     }
 
     public function rules(): array
     {
         return [
-            'professional_id' => ['required','integer','exists:users,id'],
-            'service_description' => ['nullable','string','max:2000'],
-            'scheduled_date' => ['required','date','after:now'],
-            'total' => ['nullable','numeric'],
+            'professional_service_id' => ['required', 'integer', 'exists:professional_services,id'],
+            'starts_at' => ['required', 'date', 'after:now'],
+            'description' => ['nullable', 'string', 'max:2000'],
+            'address' => ['required', 'string', 'max:255'],
+            'commune_id' => ['nullable', 'integer', 'exists:communes,id'],
         ];
     }
 }
-

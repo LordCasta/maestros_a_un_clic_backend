@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PortfolioItem extends Model
 {
-    use HasFactory;
-
     protected $fillable = [
         'professional_profile_id',
         'image_path',
@@ -21,4 +18,3 @@ class PortfolioItem extends Model
         return $this->belongsTo(ProfessionalProfile::class);
     }
 }
-

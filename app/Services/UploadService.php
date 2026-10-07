@@ -3,31 +3,48 @@
 namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Único punto de guardado de archivos.
+ *
+ * - Público (`public`): avatares y portafolio. Se sirven por URL directa.
+ * - Privado (`local`): documentos KYC y adjuntos del chat. Solo por URL firmada y temporal.
+ */
 class UploadService
 {
-    protected string $disk = 'public';
+    private const PUBLIC_DISK = 'public';
 
-    public function __construct()
+    private const PRIVATE_DISK = 'local';
+
+    public function storePublic(UploadedFile $file, string $folder): string
     {
-        // Use the public disk for profile and content uploads by default.
-        $this->disk = 'public';
+        return $file->store($folder, self::PUBLIC_DISK);
     }
 
-    /**
-     * Store uploaded file under given folder and return stored path
-     */
-    public function store(UploadedFile $file, string $folder): string
+    public function storePrivate(UploadedFile $file, string $folder): string
     {
-        $path = $file->store($folder, $this->disk);
-        return $path;
+        return $file->store($folder, self::PRIVATE_DISK);
     }
 
-    public function url(string $path): string
+    public function publicUrl(string $path): string
     {
-        return Storage::disk($this->disk)->url($path);
+        return Storage::disk(self::PUBLIC_DISK)->url($path);
+    }
+
+    public function temporaryPrivateUrl(string $path, int $minutes = 10): string
+    {
+        return Storage::disk(self::PRIVATE_DISK)->temporaryUrl($path, Carbon::now()->addMinutes($minutes));
+    }
+
+    public function deletePublic(string ...$paths): void
+    {
+        Storage::disk(self::PUBLIC_DISK)->delete($paths);
+    }
+
+    public function deletePrivate(string ...$paths): void
+    {
+        Storage::disk(self::PRIVATE_DISK)->delete($paths);
     }
 }
-
-

@@ -2,22 +2,32 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Booking;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin Booking
+ */
 class BookingResource extends JsonResource
 {
-    public function toArray($request): array
+    public function toArray(Request $request): array
     {
         return [
             'id' => $this->id,
-            'client_id' => $this->client_id,
-            'professional_id' => $this->professional_id,
-            'service_description' => $this->service_description,
-            'scheduled_date' => $this->scheduled_date,
             'status' => $this->status,
-            'total' => $this->total,
-            'created_at' => $this->created_at,
+            'service' => new ProfessionalServiceResource($this->whenLoaded('service')),
+            'client' => new UserSummaryResource($this->whenLoaded('client')),
+            'professional' => new UserSummaryResource($this->whenLoaded('professional')),
+            'description' => $this->description,
+            'address' => $this->address,
+            'commune' => new CommuneResource($this->whenLoaded('commune')),
+            'starts_at' => $this->starts_at->toIso8601String(),
+            'ends_at' => $this->ends_at->toIso8601String(),
+            'agreed_price' => (float) $this->agreed_price,
+            'started_at' => $this->started_at?->toIso8601String(),
+            'completed_at' => $this->completed_at?->toIso8601String(),
+            'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
 }
-

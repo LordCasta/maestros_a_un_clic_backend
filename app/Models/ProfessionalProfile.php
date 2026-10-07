@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\ProfessionalProfileFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProfessionalProfile extends Model
 {
+    /** @use HasFactory<ProfessionalProfileFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -17,15 +19,17 @@ class ProfessionalProfile extends Model
         'description',
         'experience_years',
         'hourly_rate',
-        'commune',
-        'is_verified',
-        'availability_status',
+        'service_radius_km',
+        'buffer_minutes',
     ];
 
     protected function casts(): array
     {
         return [
-            'is_verified' => 'boolean',
+            'experience_years' => 'integer',
+            'hourly_rate' => 'decimal:2',
+            'service_radius_km' => 'integer',
+            'buffer_minutes' => 'integer',
         ];
     }
 
@@ -34,19 +38,28 @@ class ProfessionalProfile extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function specialties(): BelongsToMany
+    public function categories(): BelongsToMany
     {
-        return $this->belongsToMany(Specialty::class, 'professional_specialty');
+        return $this->belongsToMany(Category::class, 'professional_category');
     }
 
-    public function certificates(): HasMany
+    public function services(): HasMany
     {
-        return $this->hasMany(Certificate::class);
+        return $this->hasMany(ProfessionalService::class);
     }
 
     public function portfolioItems(): HasMany
     {
         return $this->hasMany(PortfolioItem::class);
     }
-}
 
+    public function availabilityRules(): HasMany
+    {
+        return $this->hasMany(AvailabilityRule::class);
+    }
+
+    public function availabilityBlocks(): HasMany
+    {
+        return $this->hasMany(AvailabilityBlock::class);
+    }
+}
