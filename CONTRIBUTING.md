@@ -78,6 +78,15 @@ Si el cambio rompe el contrato de la API, usa `!` (`feat(api)!: …`) y explica 
 
 Excepción: cambios en `src/shared`, `src/app`, `Support/`, `bootstrap/app.php`, el esquema de BD o el contrato de la API **sí esperan** el visto bueno de la otra persona (ver § 6).
 
+### Guardas y la etiqueta `cambio-de-reglas`
+
+Los archivos que definen las reglas están protegidos por el check obligatorio **Guardas** (`.github/workflows/guardas.yml`), en los dos repos. En el backend: configuración de tests y formato (`phpunit.xml`, `tests/Pest.php`, `tests/TestCase.php`, `pint.json`), el CI (`.github/`), las instrucciones para agentes (`.ai/`, `.agents/`, `.claude/`, `AGENTS.md`, `CLAUDE.md`, `boost.json`, `config/boost.php`), `docs/arquitectura.md`, los scripts `test`/`setup` de `composer.json` y **cualquier migración que ya esté en `main`**. Lista exacta en `AGENTS.md` § Guardas del proyecto.
+
+- Si tu PR los toca **sin querer** (o porque el asistente "arregló" el CI cambiando la regla o editando una migración vieja): revierte ese cambio y corrige el código, o crea una migración nueva.
+- Si es un **cambio de reglas intencional**: hazlo en un PR aparte, explica el porqué y que la **otra persona** le ponga la etiqueta `cambio-de-reglas` al revisarlo. Con la etiqueta, el check pasa. La etiqueta nunca la pone el asistente.
+- El check también lista los atajos nuevos (`->skip()`, `markTestSkipped`, `withoutMiddleware()`, `@phpstan-ignore`…) y los tests borrados. No bloquean, pero quien revisa debe mirarlos.
+- Editar `guardas.yml` dentro de un PR no lo desactiva: corre la versión que está en `main`.
+
 ### Qué revisar en un PR ajeno
 - ¿Sigue [docs/arquitectura.md](docs/arquitectura.md)? (capas, enums, `ApiResponse`, `UploadService`)
 - ¿Tiene tests de caso feliz, validación y permisos?
@@ -113,13 +122,14 @@ Cada uno usa la herramienta que prefiera (Antigravity, Claude Code…). En este 
 | Archivo | Quién lo lee | Cómo se mantiene |
 |---------|--------------|------------------|
 | `AGENTS.md` | Antigravity, Codex, Cursor (siempre activo) | **Generado** por Laravel Boost |
-| `CLAUDE.md` | Claude Code | **Generado** por Laravel Boost |
-| `.ai/guidelines/maestros-a-un-clic.md` | Fuente de las reglas del proyecto dentro de los dos anteriores | Se edita a mano |
-| `.claude/skills/` | Claude Code | Skills oficiales de Boost (Laravel, testing) |
+| `CLAUDE.md` | Claude Code | Solo importa `AGENTS.md` (Boost ya no lo genera aparte) |
+| `.ai/guidelines/maestros-a-un-clic.md` | Fuente de las reglas del proyecto dentro de `AGENTS.md` | Se edita a mano |
+| `.agents/skills/nuevo-modulo-api/` | Antigravity y Claude Code | Procedimiento para crear endpoints como los existentes. Se edita a mano |
+| `.claude/skills/` | Claude Code | Skills oficiales de Boost (Laravel, testing). La de Tailwind está excluida en `config/boost.php`: el backend es solo API |
 | `.mcp.json` | Asistentes con MCP | Servidor de Laravel Boost: rutas, esquema de BD y documentación de la versión instalada |
 
 Reglas:
-- **No edites `AGENTS.md` ni `CLAUDE.md` a mano**: se regeneran. Cambia `.ai/guidelines/maestros-a-un-clic.md` y corre `php artisan boost:update` (también corre solo tras `composer update`). Haz el cambio en un PR que revisen los dos.
+- **No edites `AGENTS.md` a mano**: se regenera. Cambia `.ai/guidelines/maestros-a-un-clic.md` y corre `php artisan boost:update` (también corre solo tras `composer update`). Haz el cambio en un PR que revisen los dos.
 - **El asistente corre `php artisan test` y `vendor/bin/pint --dirty`** antes de dar algo por terminado.
 - **Un PR hecho con IA se revisa igual que cualquier otro.** Quien lo abre responde por el código.
 - En el frontend, `AGENTS.md` se edita a mano y hay reglas de diseño y skills propias: ver su `CONTRIBUTING.md`.

@@ -1,0 +1,124 @@
+# ⚠️ GUARDA DEL PROYECTO (AGENTS.md § Guardas del proyecto).
+#
+# Falla si el PR toca las reglas del proyecto (configuración de tests y formato, CI, instrucciones
+# para agentes, scripts `test`/`setup` de composer.json) o edita una migración existente sin la
+# etiqueta `cambio-de-reglas`, que pone una persona.
+# Además lista, como aviso, los atajos nuevos para saltarse reglas (->skip(), @phpstan-ignore…)
+# y los tests borrados.
+#
+# Usa `pull_request_target`: corre la versión de este archivo que está en `main`, así que editarlo
+# dentro de un PR no lo desactiva. No hace checkout ni ejecuta código del PR: solo lee la lista de
+# archivos y composer.json por la API, por eso es seguro.
+# Es un check obligatorio de `main`: si se borra o se renombra, los PR quedan bloqueados.
+
+name: Guardas
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  guardas:
+    name: Guardas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Revisar reglas protegidas y atajos
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const LABEL = 'cambio-de-reglas'
+
+            // Archivos que definen las reglas del proyecto.
+            const PROTECTED = [
+              /^phpunit\.xml$/,
+              /^tests\/Pest\.php$/,
+              /^tests\/TestCase\.php$/,
+              /^pint\.json$/,
+              /^\.editorconfig$/,
+              /^\.github\//,
+              /^\.ai\//,
+              /^\.agents\//,
+              /^\.claude\//,
+              /^AGENTS\.md$/,
+              /^CLAUDE\.md$/,
+              /^boost\.json$/,
+              /^config\/boost\.php$/,
+              /^docs\/arquitectura\.md$/,
+            ]
+            // composer.json solo cuenta si cambian los scripts de verificación.
+            const PROTECTED_SCRIPTS = ['test', 'setup']
+
+            // Atajos para saltarse reglas: no bloquean, pero quedan a la vista.
+            const HATCHES = /->skip\(|->todo\(|->only\(|markTestSkipped|markTestIncomplete|@phpstan-ignore|@codingStandardsIgnore|phpcs:ignore|withoutMiddleware\(|--no-verify/
+
+            const pr = context.payload.pull_request
+            const { owner, repo } = context.repo
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner,
+              repo,
+              pull_number: pr.number,
+              per_page: 100,
+            })
+
+            async function composerScripts(repoOwner, repoName, ref) {
+              try {
+                const { data } = await github.rest.repos.getContent({ owner: repoOwner, repo: repoName, path: 'composer.json', ref })
+                const scripts = JSON.parse(Buffer.from(data.content, 'base64').toString()).scripts ?? {}
+                return JSON.stringify(PROTECTED_SCRIPTS.map((name) => scripts[name] ?? null))
+              } catch {
+                return 'ilegible'
+              }
+            }
+
+            const touched = files
+              .filter((file) => PROTECTED.some((pattern) => pattern.test(file.filename)))
+              .map((file) => file.filename)
+
+            if (files.some((file) => file.filename === 'composer.json')) {
+              const before = await composerScripts(owner, repo, pr.base.sha)
+              const after = await composerScripts(pr.head.repo.owner.login, pr.head.repo.name, pr.head.sha)
+              if (before !== after) touched.push(`composer.json (scripts ${PROTECTED_SCRIPTS.join(', ')})`)
+            }
+
+            // Las migraciones que ya están en main no se editan: el cambio va en una migración nueva.
+            const migrations = files
+              .filter((file) => file.filename.startsWith('database/migrations/') && file.status !== 'added')
+              .map((file) => `${file.filename} (${file.status})`)
+
+            const hatches = files.flatMap((file) =>
+              (file.patch ?? '')
+                .split('\n')
+                .filter((line) => line.startsWith('+') && !line.startsWith('+++') && HATCHES.test(line))
+                .map((line) => `${file.filename}: ${line.slice(1).trim()}`),
+            )
+            const removedTests = files
+              .filter((file) => file.filename.startsWith('tests/') && file.status === 'removed')
+              .map((file) => `${file.filename}: test borrado`)
+            hatches.push(...removedTests)
+
+            const blocking = [...touched, ...migrations]
+            const labeled = pr.labels.some((label) => label.name === LABEL)
+
+            const summary = core.summary.addHeading('Guardas del proyecto', 2)
+            if (touched.length) summary.addRaw('**Reglas protegidas modificadas:**').addList(touched)
+            if (migrations.length) summary.addRaw('**Migraciones existentes modificadas (debería ser una migración nueva):**').addList(migrations)
+            if (hatches.length) summary.addRaw('**Atajos nuevos para saltarse reglas o tests borrados (revísalos):**').addList(hatches)
+            if (!blocking.length && !hatches.length) summary.addRaw('Sin cambios en reglas protegidas ni atajos nuevos. ✅')
+            await summary.write()
+
+            for (const hatch of hatches) core.warning(`Atajo para saltarse una regla: ${hatch}`)
+
+            if (blocking.length && !labeled) {
+              core.setFailed(
+                `Este PR modifica reglas protegidas del proyecto o migraciones existentes:\n- ${blocking.join('\n- ')}\n\n` +
+                `Si es un cambio intencional y acordado, una persona debe ponerle la etiqueta "${LABEL}". ` +
+                `Si solo querías que algo pasara el CI, corrige el código en lugar de la regla; ` +
+                `si necesitas cambiar el esquema, crea una migración nueva. Ver AGENTS.md § Guardas del proyecto.`,
+              )
+            } else if (blocking.length) {
+              core.notice(`Cambios protegidos con la etiqueta "${LABEL}": ${blocking.join(', ')}`)
+            }
