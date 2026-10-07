@@ -72,9 +72,11 @@ Si el cambio rompe el contrato de la API, usa `!` (`feat(api)!: …`) y explica 
 
 1. Título en formato de commit convencional; se usa como mensaje al fusionar.
 2. Completa la plantilla: qué HU cierra, qué cambió y cómo probarlo.
-3. El CI debe estar en verde.
-4. **La otra persona revisa y aprueba.** Nadie aprueba su propio PR.
-5. Se fusiona con **Squash and merge** y se borra la rama.
+3. **El CI debe estar en verde.** GitHub no deja fusionar sin eso (protección de `main`). Si falla: [guía § 4](docs/guia-de-trabajo.md#4-si-el-ci-falla).
+4. **Se pide revisión a la otra persona** (`--reviewer`), pero la aprobación **no es obligatoria**: si en **48 horas** nadie revisó y el CI está en verde, el autor fusiona. Se puede revisar también después de fusionar (comentando en el PR o abriendo un issue).
+5. Se fusiona con **Squash and merge** (es la única opción habilitada) y la rama se borra sola.
+
+Excepción: cambios en `src/shared`, `src/app`, `Support/`, `bootstrap/app.php`, el esquema de BD o el contrato de la API **sí esperan** el visto bueno de la otra persona (ver § 6).
 
 ### Qué revisar en un PR ajeno
 - ¿Sigue [docs/arquitectura.md](docs/arquitectura.md)? (capas, enums, `ApiResponse`, `UploadService`)
@@ -101,7 +103,7 @@ Una HU está lista cuando:
 - [ ] Backend con tests (feliz, validación, permisos) en verde.
 - [ ] Frontend conectado a la API real, sin datos quemados.
 - [ ] Documentación de la API actualizada.
-- [ ] Revisada y aprobada por la otra persona.
+- [ ] Revisada por la otra persona, o 48 horas sin revisión con CI en verde.
 - [ ] Fusionada en `main` en los dos repos.
 
 ## 8. Trabajo con asistentes de IA

@@ -155,14 +155,14 @@ En la plantilla del frontend:
 
 ### Paso 7 — Revisión
 
-- El CI corre solo. Si sale en rojo, abre el detalle en la pestaña "Checks", corrige, haz commit y push: el PR se actualiza solo.
+- El CI corre solo en cada push. Si sale en rojo: [§ 4. Si el CI falla](#4-si-el-ci-falla).
 - La otra persona revisa. Si pide cambios: corrige en la misma rama, push y responde el comentario.
 - Revisar un PR ajeno: pestaña "Files changed" → comentarios por línea → "Review changes" → Approve o Request changes. Qué mirar está en [CONTRIBUTING.md § 5](../CONTRIBUTING.md#5-pull-requests).
-- Nadie aprueba su propio PR.
+- La aprobación **no es obligatoria**: si en 48 horas nadie revisó y el CI está en verde, fusionas tú. Lo que toca `shared`, el esquema o el contrato de la API sí espera el visto bueno.
 
 ### Paso 8 — Fusionar (merge)
 
-Con CI en verde y aprobado, **primero el backend, después el frontend**:
+Con el CI en verde (y la revisión hecha o las 48 horas cumplidas), **primero el backend, después el frontend**:
 
 ```bash
 gh pr merge --squash --delete-branch      # en cada repo, desde la rama del PR
@@ -183,7 +183,56 @@ En el backend, si llegaron migraciones nuevas: `php artisan migrate`.
 
 ---
 
-## 4. Durante el trabajo
+## 4. Si el CI falla
+
+GitHub no deja fusionar un PR con el CI en rojo. No es un castigo: es el aviso de que algo se rompió antes de que llegue a `main`.
+
+### 1. Ver qué falló
+
+En el PR, pestaña **Checks** (o el enlace "Details" junto a la ✗) → abre el paso en rojo → baja hasta las últimas líneas: ahí está el error. Desde la terminal:
+
+```bash
+gh pr checks                    # qué jobs fallaron
+gh run view --log-failed        # el log solo de lo que falló
+```
+
+### 2. Reproducirlo en tu máquina
+
+El CI corre los mismos comandos que tú. Corre el que falló:
+
+| Repo | Paso en rojo | Comando local | Arreglo típico |
+|------|--------------|---------------|----------------|
+| Backend | Formato (Pint) | `vendor/bin/pint --test` | `vendor/bin/pint` y commit |
+| Backend | Tests (Pest) | `php artisan test` | Leer qué test falla y por qué: ¿bug tuyo o test desactualizado por un cambio a propósito? |
+| Backend | Solo falla en PHP 8.2 | — | Usaste algo de PHP 8.3+; reescríbelo compatible |
+| Frontend | `npm ci` / lockfile | `npm run lint:lockfile` | `npm install` y commit del `package-lock.json` |
+| Frontend | Lint | `npm run lint` | `npm run fix` para lo automático; el resto, a mano |
+| Frontend | Tokens de diseño | `npm run lint:tokens` | Cambia el color por un token (`docs/sistema-de-diseno.md`) |
+| Frontend | Formato | `npm run format:check` | `npm run format` y commit |
+| Frontend | Tipos | `npm run type-check` | Corrige el tipo; no uses `any` ni `@ts-ignore` para callarlo |
+| Frontend | Tests | `npx vitest run` | Igual que en el backend |
+| Frontend | Build | `npm run build` | Suele ser un import roto o un archivo movido |
+
+### 3. Corregir y subir
+
+```bash
+git add .
+git commit -m "fix: corregir <lo que falló>"
+git push
+```
+
+El CI vuelve a correr solo sobre el mismo PR. No hace falta abrir otro.
+
+### Reglas
+- **No borres ni saltes un test, ni desactives una regla de lint, para que pase.** Si un test está mal porque el comportamiento cambió a propósito, actualízalo y explícalo en el PR.
+- **"En mi máquina sí pasa"**: casi siempre es una dependencia nueva sin commitear, el lockfile, o algo de Windows (mayúsculas en nombres de archivo: Linux las distingue).
+- **Falla algo que no tocaste** (p. ej. una caída de red al instalar): botón **Re-run failed jobs** en la pestaña Checks, o `gh run rerun --failed`. Si vuelve a fallar, avísalo en el PR.
+- El job **"Seguridad de dependencias"** no bloquea: si sale en rojo es una alerta nueva publicada sobre una librería. Avísalo, y se resuelve en un PR aparte.
+- Si no logras resolverlo, deja el PR abierto, comenta qué probaste y pide ayuda.
+
+---
+
+## 5. Durante el trabajo
 
 | Situación | Qué hacer |
 |-----------|-----------|
@@ -199,7 +248,7 @@ En el backend, si llegaron migraciones nuevas: `php artisan migrate`.
 
 ---
 
-## 5. Comunicación
+## 6. Comunicación
 
 - **Dudas y decisiones de una HU** → comentario en su issue (queda escrito para los dos y para la IA).
 - **Dudas de código** → comentario en el PR, en la línea concreta.
@@ -208,7 +257,7 @@ En el backend, si llegaron migraciones nuevas: `php artisan migrate`.
 
 ---
 
-## 6. Chuleta
+## 7. Chuleta
 
 ```bash
 # Empezar una HU
