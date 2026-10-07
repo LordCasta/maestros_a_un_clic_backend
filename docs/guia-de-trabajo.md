@@ -43,7 +43,7 @@ npm run dev                     # http://localhost:5173
 Comprueba que funciona entrando con `cliente@maestros.test` / `password`. Otras cuentas: `profesional@maestros.test`, `pendiente@maestros.test`, `admin@maestros.test` (todas con `password`).
 
 ### Antigravity
-Abre **cada repo como su propio workspace**. Antigravity lee solo `AGENTS.md` en cada uno; en el frontend además activa las reglas de diseño y arquitectura de `.agents/rules/` cuando editas archivos. No hace falta configurar nada más.
+Abre **cada repo como su propio workspace** (no la carpeta que contiene a los dos: las reglas y skills solo se cargan desde la raíz del workspace). Antigravity lee `AGENTS.md` en cada uno; en el frontend además activa las reglas de diseño y arquitectura de `.agents/rules/` cuando editas archivos. Las skills (`.agents/skills/`: `nuevo-modulo-api` en el backend, `nuevo-modulo` y `conectar-maqueta` en el frontend) se usan solas cuando la tarea encaja, o pidiéndolas por nombre. No hace falta configurar nada más.
 
 ### Lee una vez
 1. Backend: [docs/arquitectura.md](arquitectura.md), [docs/api/convenciones.md](api/convenciones.md), [docs/api/endpoints.md](api/endpoints.md).
@@ -205,6 +205,7 @@ El CI corre los mismos comandos que tú. Corre el que falló:
 | Backend | Formato (Pint) | `vendor/bin/pint --test` | `vendor/bin/pint` y commit |
 | Backend | Tests (Pest) | `php artisan test` | Leer qué test falla y por qué: ¿bug tuyo o test desactualizado por un cambio a propósito? |
 | Backend | Solo falla en PHP 8.2 | — | Usaste algo de PHP 8.3+; reescríbelo compatible |
+| Los dos | **Guardas** | — (corre en GitHub) | El PR tocó una regla protegida o una migración existente. Revierte ese cambio y corrige el código (o crea una migración nueva). Si el cambio de regla es intencional, PR aparte y la otra persona pone la etiqueta `cambio-de-reglas` |
 | Frontend | `npm ci` / lockfile | `npm run lint:lockfile` | `npm install` y commit del `package-lock.json` |
 | Frontend | Lint | `npm run lint` | `npm run fix` para lo automático; el resto, a mano |
 | Frontend | Tokens de diseño | `npm run lint:tokens` | Cambia el color por un token (`docs/sistema-de-diseno.md`) |
@@ -224,7 +225,7 @@ git push
 El CI vuelve a correr solo sobre el mismo PR. No hace falta abrir otro.
 
 ### Reglas
-- **No borres ni saltes un test, ni desactives una regla de lint, para que pase.** Si un test está mal porque el comportamiento cambió a propósito, actualízalo y explícalo en el PR.
+- **No borres ni saltes un test, ni desactives una regla de lint, para que pase.** Tampoco le pidas al asistente que "haga pasar el CI" sin más: tiende a aflojar la regla. Pídele que corrija la causa, y si ves que tocó un archivo de reglas, el check **Guardas** te lo va a marcar. Si un test está mal porque el comportamiento cambió a propósito, actualízalo y explícalo en el PR.
 - **"En mi máquina sí pasa"**: casi siempre es una dependencia nueva sin commitear, el lockfile, o algo de Windows (mayúsculas en nombres de archivo: Linux las distingue).
 - **Falla algo que no tocaste** (p. ej. una caída de red al instalar): botón **Re-run failed jobs** en la pestaña Checks, o `gh run rerun --failed`. Si vuelve a fallar, avísalo en el PR.
 - El job **"Seguridad de dependencias"** no bloquea: si sale en rojo es una alerta nueva publicada sobre una librería. Avísalo, y se resuelve en un PR aparte.
