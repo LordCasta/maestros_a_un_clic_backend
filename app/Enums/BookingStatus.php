@@ -33,7 +33,8 @@ enum BookingStatus: string
     public function allowedTransitions(): array
     {
         return match ($this) {
-            self::Pending => [self::Accepted, self::Rejected, self::Cancelled],
+            // Pending → Pending: reprogramar una solicitud que el profesional aún no responde (HU012).
+            self::Pending => [self::Accepted, self::Rejected, self::Cancelled, self::Pending],
             self::Accepted => [self::Confirmed, self::Pending, self::Cancelled],
             self::Confirmed => [self::InProgress, self::Pending, self::Cancelled],
             self::InProgress => [self::Completed],

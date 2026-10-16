@@ -10,10 +10,13 @@ use App\Models\ProfessionalProfile;
 use App\Models\ProfessionalService;
 use App\Models\User;
 use App\Notifications\BookingAnswered;
+use App\Notifications\BookingCancelled;
 use App\Notifications\BookingConfirmed;
 use App\Notifications\BookingProgressed;
 use App\Notifications\BookingRequested;
+use App\Notifications\BookingRescheduled;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -151,17 +154,94 @@ class BookingService
         return $booking;
     }
 
+    /**
+     * HU012: cancelar antes de la hora programada, con motivo. Libera la agenda (transition()
+     * emite AvailabilityChanged) y avisa a la otra parte. El admin puede cancelar siempre.
+     */
     public function cancel(Booking $booking, User $by, string $reason): Booking
     {
-        return $this->transition($booking, BookingStatus::Cancelled, $by, $reason);
+        abort_if(
+            ! $by->isAdmin() && Carbon::now()->gte($booking->starts_at),
+            409,
+            'La hora de la reserva ya llegó; ya no se puede cancelar.',
+        );
+
+        $booking = $this->transition($booking, BookingStatus::Cancelled, $by, $reason);
+        $this->counterpartsOf($booking, $by)->each->notify(new BookingCancelled($booking, $by, $reason));
+
+        return $booking;
+    }
+
+    /**
+     * HU012: mover la reserva a otra hora libre del profesional, antes de la hora programada.
+     * Vuelve a `pending` para que el profesional acepte el nuevo horario, y la fecha anterior
+     * queda en booking_status_changes.previous_starts_at.
+     */
+    public function reschedule(Booking $booking, User $by, string $startsAt): Booking
+    {
+        abort_unless(
+            $booking->status->canTransitionTo(BookingStatus::Pending),
+            409,
+            'Esta reserva ya no se puede reprogramar.',
+        );
+        abort_if(Carbon::now()->gte($booking->starts_at), 409, 'La hora de la reserva ya llegó; ya no se puede reprogramar.');
+
+        $booking->loadMissing('service.professionalProfile');
+        $profile = $booking->service->professionalProfile;
+        $previous = $booking->starts_at->copy();
+        $newStart = Carbon::parse($startsAt)->setTimezone(config('app.timezone'));
+        $newEnd = $newStart->copy()->addMinutes($booking->starts_at->diffInMinutes($booking->ends_at));
+
+        if (! $this->availability->withinSchedule($profile, $newStart, $newEnd)) {
+            throw ValidationException::withMessages([
+                'starts_at' => 'El profesional no atiende en ese horario. Elige una de las horas disponibles.',
+            ]);
+        }
+
+        $booking = DB::transaction(function () use ($booking, $by, $profile, $previous, $newStart, $newEnd) {
+            ProfessionalProfile::whereKey($profile->id)->lockForUpdate()->first();
+
+            abort_if(
+                $this->availability->hasBookingConflict($profile, $newStart, $newEnd, $booking->id),
+                409,
+                'El profesional ya tiene una reserva en ese horario.',
+            );
+
+            return $this->transition(
+                $booking,
+                BookingStatus::Pending,
+                $by,
+                attributes: ['starts_at' => $newStart, 'ends_at' => $newEnd],
+                change: ['previous_starts_at' => $previous],
+            );
+        });
+
+        // La hora anterior se libera y la nueva se ocupa, aunque siga "ocupando agenda".
+        AvailabilityChanged::dispatch($booking->professional_id);
+        $this->counterpartsOf($booking, $by)->each->notify(new BookingRescheduled($booking, $by, $previous));
+
+        return $booking;
+    }
+
+    /**
+     * La otra parte de la reserva; si actúa el admin, las dos.
+     *
+     * @return Collection<int, User>
+     */
+    private function counterpartsOf(Booking $booking, User $by): Collection
+    {
+        return collect([$booking->client, $booking->professional])
+            ->reject(fn (User $user) => $user->is($by))
+            ->values();
     }
 
     /**
      * Cambia el estado validando la transición y registra el cambio en booking_status_changes.
      *
      * @param  array<string, mixed>  $attributes  Otros campos que cambian junto con el estado (p. ej. started_at).
+     * @param  array<string, mixed>  $change  Datos extra del registro del cambio (p. ej. previous_starts_at).
      */
-    public function transition(Booking $booking, BookingStatus $to, User $by, ?string $reason = null, array $attributes = []): Booking
+    public function transition(Booking $booking, BookingStatus $to, User $by, ?string $reason = null, array $attributes = [], array $change = []): Booking
     {
         abort_unless(
             $booking->status->canTransitionTo($to),
@@ -171,13 +251,13 @@ class BookingService
 
         $from = $booking->status;
 
-        $booking = DB::transaction(function () use ($booking, $to, $by, $reason, $attributes) {
+        $booking = DB::transaction(function () use ($booking, $to, $by, $reason, $attributes, $change) {
             $booking->statusChanges()->create([
                 'from_status' => $booking->status,
                 'to_status' => $to,
                 'changed_by' => $by->id,
                 'reason' => $reason,
-            ]);
+            ] + $change);
 
             $booking->update(['status' => $to] + $attributes);
 

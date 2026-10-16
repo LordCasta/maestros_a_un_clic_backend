@@ -406,11 +406,30 @@ Sin cuerpo. `confirmed` → `in_progress` (HU027) y guarda `started_at`. Solo **
 #### `POST /bookings/{id}/complete`
 Sin cuerpo. `in_progress` → `completed` (HU028) y guarda `completed_at`. Desde ese estado se puede calificar (`POST /bookings/{id}/review`, HU005). Avisa al cliente con `booking.completed`. **403** igual que `start`; **409** si la reserva no está en `in_progress`.
 
+#### `POST /bookings/{id}/reschedule`
+```json
+{ "starts_at": "2026-10-21T15:00:00-05:00" }
+```
+Mueve la reserva a otra hora libre del profesional (HU012). Se puede desde `pending`, `accepted` o `confirmed` y **antes de la hora programada**.
+- Conserva la duración y vuelve a `pending`: el profesional debe aceptar el nuevo horario.
+- La fecha anterior queda en el historial (`previous_starts_at`).
+- La nueva hora puede cruzarse con la anterior de la misma reserva, pero no con otras reservas.
+- Avisa a la otra parte con `booking.rescheduled`.
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `message: "Reserva reprogramada. El profesional debe aceptar el nuevo horario."` |
+| **403** | No participa en la reserva |
+| **409** | Ya llegó la hora, el estado no lo permite (`in_progress`, `completed`…) o la nueva hora se cruza con otra reserva |
+| **422** | `starts_at` falta, ya pasó o está fuera del horario del profesional / en un bloqueo |
+
 #### `POST /bookings/{id}/cancel`
 ```json
 { "reason": "Tengo una emergencia familiar." }
 ```
-`reason` es obligatorio (mín. 5 caracteres). **409** si el estado actual no permite cancelar (p. ej. `completed`).
+`reason` es obligatorio (mín. 5 caracteres). Solo **antes de la hora programada** (el admin puede siempre). Libera la agenda y avisa a la otra parte con `booking.cancelled`; si cancela el admin, a las dos.
+
+**409** si ya llegó la hora (`La hora de la reserva ya llegó; ya no se puede cancelar.`) o si el estado actual no permite cancelar (p. ej. `completed`).
 
 ---
 
@@ -426,6 +445,8 @@ Se guardan en la tabla `notifications` y llegan al instante por el canal privado
 | `booking.confirmed` | Profesional | El cliente confirma (HU036) |
 | `booking.started` | Cliente | El profesional inicia el servicio (HU027) |
 | `booking.completed` | Cliente | El profesional finaliza el servicio (HU028); invita a calificar |
+| `booking.cancelled` | La otra parte (las dos si cancela el admin) | Se cancela la reserva (HU012), con el motivo |
+| `booking.rescheduled` | La otra parte | Se reprograma la reserva (HU012), con la fecha anterior y la nueva |
 
 Datos (los mismos en la base y en el WebSocket):
 ```json

@@ -65,5 +65,6 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::post('bookings/{booking}/confirm', [BookingController::class, 'confirm']);
     Route::post('bookings/{booking}/start', [BookingController::class, 'start']);
     Route::post('bookings/{booking}/complete', [BookingController::class, 'complete']);
+    Route::post('bookings/{booking}/reschedule', [BookingController::class, 'reschedule']);
     Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel']);
 });
