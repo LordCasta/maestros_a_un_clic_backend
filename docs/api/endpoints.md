@@ -117,6 +117,7 @@ Logout revoca el token actual y devuelve `data: null`. `me` devuelve el mismo ob
 |--------|------|--------|----|
 | GET | `/professionals` | 🌐 | HU010, HU033, HU039, HU046 |
 | GET | `/professionals/{id}` | 🌐 | — |
+| GET | `/professionals/{id}/slots` | 🌐 | HU025, HU004 |
 
 Solo aparecen profesionales **verificados y no bloqueados**. Nunca incluyen email, teléfono ni dirección.
 
@@ -167,6 +168,38 @@ Igual que un elemento del listado, más `services` (solo activos) y `portfolio`:
 ```
 **404** si no existe, no está verificado o está bloqueado.
 
+#### `GET /professionals/{id}/slots?date=2026-10-17&service_id=9`
+Horas en las que se puede reservar ese servicio ese día. Las calcula `AvailabilityService` a partir de:
+- el **horario semanal** del profesional (`availability_rules`): el servicio completo debe caber en una franja;
+- sus **bloqueos** (`availability_blocks`);
+- sus **reservas que ocupan agenda** (`pending`, `accepted`, `confirmed`, `in_progress`), ampliadas con su tiempo de descanso (`buffer_minutes`) antes y después;
+- la hora actual: no devuelve horas pasadas.
+
+Los inicios van cada **30 minutos** desde el comienzo de cada franja (`AvailabilityService::SLOT_STEP_MINUTES`).
+
+| Query | Descripción |
+|-------|-------------|
+| `date` | `Y-m-d`, desde hoy hasta 60 días adelante. Obligatorio |
+| `service_id` | Servicio activo de ese profesional. Obligatorio |
+
+**200:**
+```json
+{
+  "success": true,
+  "message": null,
+  "data": {
+    "date": "2026-10-17",
+    "service_id": 9,
+    "duration_minutes": 120,
+    "slots": [
+      { "starts_at": "2026-10-17T08:00:00-05:00", "ends_at": "2026-10-17T10:00:00-05:00" },
+      { "starts_at": "2026-10-17T08:30:00-05:00", "ends_at": "2026-10-17T10:30:00-05:00" }
+    ]
+  }
+}
+```
+Un día sin horario devuelve `slots: []`. **404** si el profesional no es visible públicamente. **422** si la fecha está fuera de rango o el servicio no es suyo o no está activo.
+
 ---
 
 ### Favoritos (👤 solo clientes)
@@ -190,10 +223,17 @@ Igual que un elemento del listado, más `services` (solo activos) y `portfolio`:
 | GET | `/bookings` | 🔑 | HU016, HU017 |
 | POST | `/bookings` | 👤 verificado | HU004 |
 | GET | `/bookings/{id}` | 🔑 participante o admin | HU026 |
+| POST | `/bookings/{id}/accept` | 🛠 el profesional de la reserva | HU004 |
+| POST | `/bookings/{id}/reject` | 🛠 el profesional de la reserva | HU004 |
 | POST | `/bookings/{id}/cancel` | 🔑 participante o admin | HU012 |
 
 #### `GET /bookings`
 Paginado. El cliente ve las suyas, el profesional las suyas, el admin todas. Orden: más reciente primero.
+
+| Query | Descripción |
+|-------|-------------|
+| `status` | Un estado (`pending`, `accepted`…). `?status=pending` son las solicitudes por responder del panel del profesional |
+| `page`, `per_page` | Paginación (`per_page` máx. 50) |
 
 #### `POST /bookings`
 ```json
@@ -206,14 +246,15 @@ Paginado. El cliente ve las suyas, el profesional las suyas, el admin todas. Ord
 }
 ```
 - El profesional, `ends_at` (inicio + duración del servicio) y `agreed_price` (precio del servicio en ese momento) los calcula el backend.
-- Nace en `pending`.
+- Nace en `pending` y avisa al profesional con la notificación `booking.requested` (ver [Notificaciones](#notificaciones)).
+- `starts_at` debe ser una de las horas de `GET /professionals/{id}/slots`: dentro del horario y sin bloqueos (si no, **422** en `starts_at`) y sin cruzarse con otra reserva (si no, **409**).
 
 | Respuesta | Cuándo |
 |-----------|--------|
 | **201** | Reserva creada |
 | **403** | No es cliente, o no está verificado (`Debes verificar tu identidad antes de hacer una reserva.`) |
 | **409** | Se cruza con otra reserva del profesional, contando su tiempo de descanso |
-| **422** | Datos inválidos, fecha pasada, o servicio inactivo |
+| **422** | Datos inválidos, fecha pasada, servicio inactivo, o fuera del horario del profesional / en un bloqueo (`starts_at`: `El profesional no atiende en ese horario. Elige una de las horas disponibles.`) |
 
 **201:**
 ```json
@@ -239,11 +280,49 @@ Paginado. El cliente ve las suyas, el profesional las suyas, el admin todas. Ord
 }
 ```
 
+#### `POST /bookings/{id}/accept`
+Sin cuerpo. `pending` → `accepted`. La reserva queda **aceptada, no confirmada**: el cliente la confirma después (`POST /bookings/{id}/confirm`, HU036). Avisa al cliente con `booking.accepted`.
+
+#### `POST /bookings/{id}/reject`
+```json
+{ "reason": "Ese día no tengo los repuestos." }
+```
+`reason` es opcional (mín. 5 caracteres si se envía) y el cliente lo ve en la notificación. `pending` → `rejected`; la hora vuelve a quedar libre. Avisa al cliente con `booking.rejected`.
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `data`: la reserva con el estado nuevo |
+| **403** | No es el profesional de la reserva (`Solo el profesional de la reserva puede responder la solicitud.`) |
+| **409** | La reserva ya no está en `pending` |
+
 #### `POST /bookings/{id}/cancel`
 ```json
 { "reason": "Tengo una emergencia familiar." }
 ```
 `reason` es obligatorio (mín. 5 caracteres). **409** si el estado actual no permite cancelar (p. ej. `completed`).
+
+---
+
+### Notificaciones
+
+Se guardan en la tabla `notifications` y llegan al instante por el canal privado `App.Models.User.{id}` ([../tiempo-real.md](../tiempo-real.md)). El listado y marcar como leídas (`GET /notifications`…) llegan con HU018.
+
+| `type` | A quién | Cuándo |
+|--------|---------|--------|
+| `booking.requested` | Profesional | Un cliente crea una reserva (HU004) |
+| `booking.accepted` | Cliente | El profesional acepta (HU004) |
+| `booking.rejected` | Cliente | El profesional rechaza (HU004) |
+
+Datos (los mismos en la base y en el WebSocket):
+```json
+{
+  "id": "9f1c…",
+  "type": "booking.requested",
+  "booking_id": 42,
+  "title": "Nueva solicitud de reserva",
+  "body": "Camila Restrepo solicitó «Reparación de fugas» para el 17 de octubre, 9:00 a. m."
+}
+```
 
 ---
 
@@ -309,16 +388,13 @@ Rutas y responsables acordados antes de implementar. Al implementar un endpoint 
 | PUT | `/professional/availability/rules` | 🛠 | HU003 |
 | POST | `/professional/availability/blocks` | 🛠 | HU003 |
 | DELETE | `/professional/availability/blocks/{id}` | 🛠 | HU003 |
-| GET | `/professionals/{id}/slots?date=&service_id=` | 🌐 | HU025 |
 
-Además amplía `BookingService::ensureSlotIsFree()` con horario semanal y bloqueos.
+`GET /professionals/{id}/slots` ya está implementado (ver Parte 1 § Profesionales), igual que la validación de horario y bloqueos al reservar (`AvailabilityService`). Falta la gestión del horario por el profesional.
 
 ### Módulo: Ciclo de vida de la reserva
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| POST | `/bookings/{id}/accept` | 🛠 | HU004 |
-| POST | `/bookings/{id}/reject` | 🛠 | HU004 |
 | POST | `/bookings/{id}/confirm` | 👤 | HU036 |
 | POST | `/bookings/{id}/reschedule` | 🔑 participante | HU012 |
 | POST | `/bookings/{id}/start` | 🛠 | HU027 |

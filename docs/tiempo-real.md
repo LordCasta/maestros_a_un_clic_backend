@@ -84,6 +84,8 @@ Eventos planeados (se implementan en sus módulos):
 | `booking.status-changed` | `booking.{id}` | Ciclo de vida de la reserva |
 | Notificaciones de Laravel | `App.Models.User.{id}` | Notificaciones |
 
+Las notificaciones (`app/Notifications`) usan los canales `database` y `broadcast`, y definen `databaseType()` y `broadcastType()` con el mismo nombre `recurso.accion` (p. ej. `booking.requested`). Así el frontend recibe la misma forma por el WebSocket y, con HU018, en `GET /notifications`. Tipos existentes: [api/endpoints.md § Notificaciones](api/endpoints.md#notificaciones).
+
 ## Cliente (frontend)
 
 Paquetes: `laravel-echo` y `pusher-js` (Reverb usa el protocolo de Pusher).
