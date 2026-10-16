@@ -225,6 +225,7 @@ Un día sin horario devuelve `slots: []`. **404** si el profesional no es visibl
 | GET | `/bookings/{id}` | 🔑 participante o admin | HU026 |
 | POST | `/bookings/{id}/accept` | 🛠 el profesional de la reserva | HU004 |
 | POST | `/bookings/{id}/reject` | 🛠 el profesional de la reserva | HU004 |
+| POST | `/bookings/{id}/confirm` | 👤 el cliente de la reserva | HU036 |
 | POST | `/bookings/{id}/cancel` | 🔑 participante o admin | HU012 |
 
 #### `GET /bookings`
@@ -281,7 +282,7 @@ Paginado. El cliente ve las suyas, el profesional las suyas, el admin todas. Ord
 ```
 
 #### `POST /bookings/{id}/accept`
-Sin cuerpo. `pending` → `accepted`. La reserva queda **aceptada, no confirmada**: el cliente la confirma después (`POST /bookings/{id}/confirm`, HU036). Avisa al cliente con `booking.accepted`.
+Sin cuerpo. `pending` → `accepted`. La reserva queda **aceptada, no confirmada**: el cliente la confirma después (`POST /bookings/{id}/confirm`). Avisa al cliente con `booking.accepted`.
 
 #### `POST /bookings/{id}/reject`
 ```json
@@ -294,6 +295,15 @@ Sin cuerpo. `pending` → `accepted`. La reserva queda **aceptada, no confirmada
 | **200** | `data`: la reserva con el estado nuevo |
 | **403** | No es el profesional de la reserva (`Solo el profesional de la reserva puede responder la solicitud.`) |
 | **409** | La reserva ya no está en `pending` |
+
+#### `POST /bookings/{id}/confirm`
+Sin cuerpo. `accepted` → `confirmed` (HU036): el cliente confirma después de que el profesional aceptó. Queda registrado en `booking_status_changes` y avisa al profesional con `booking.confirmed`.
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `message: "Reserva confirmada."`, `data`: la reserva en `confirmed` |
+| **403** | No es el cliente de la reserva (`Solo el cliente de la reserva puede confirmarla.`) |
+| **409** | La reserva no está en `accepted` (todavía pendiente, ya confirmada, cancelada…) |
 
 #### `POST /bookings/{id}/cancel`
 ```json
@@ -312,6 +322,7 @@ Se guardan en la tabla `notifications` y llegan al instante por el canal privado
 | `booking.requested` | Profesional | Un cliente crea una reserva (HU004) |
 | `booking.accepted` | Cliente | El profesional acepta (HU004) |
 | `booking.rejected` | Cliente | El profesional rechaza (HU004) |
+| `booking.confirmed` | Profesional | El cliente confirma (HU036) |
 
 Datos (los mismos en la base y en el WebSocket):
 ```json
@@ -395,7 +406,6 @@ Rutas y responsables acordados antes de implementar. Al implementar un endpoint 
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| POST | `/bookings/{id}/confirm` | 👤 | HU036 |
 | POST | `/bookings/{id}/reschedule` | 🔑 participante | HU012 |
 | POST | `/bookings/{id}/start` | 🛠 | HU027 |
 | POST | `/bookings/{id}/complete` | 🛠 | HU028 |

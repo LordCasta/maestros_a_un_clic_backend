@@ -72,6 +72,15 @@ class BookingController extends Controller
         return $this->ok(new BookingResource($booking->load(self::RELATIONS)), 'Solicitud rechazada.');
     }
 
+    public function confirm(Request $request, Booking $booking): JsonResponse
+    {
+        $this->authorize('confirm', $booking);
+
+        $booking = $this->bookings->confirm($booking, $request->user());
+
+        return $this->ok(new BookingResource($booking->load(self::RELATIONS)), 'Reserva confirmada.');
+    }
+
     public function cancel(CancelBookingRequest $request, Booking $booking): JsonResponse
     {
         $this->authorize('cancel', $booking);
