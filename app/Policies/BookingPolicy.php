@@ -32,6 +32,16 @@ class BookingPolicy
     }
 
     /**
+     * HU004: solo el profesional de la reserva acepta o rechaza la solicitud.
+     */
+    public function respond(User $user, Booking $booking): Response
+    {
+        return $user->id === $booking->professional_id
+            ? Response::allow()
+            : Response::deny('Solo el profesional de la reserva puede responder la solicitud.');
+    }
+
+    /**
      * HU012: cliente o profesional pueden cancelar.
      */
     public function cancel(User $user, Booking $booking): bool

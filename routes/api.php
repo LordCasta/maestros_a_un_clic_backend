@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\ProfessionalController;
+use App\Http\Controllers\Api\ProfessionalSlotController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -34,6 +35,7 @@ Route::get('communes', [CatalogController::class, 'communes']);
 Route::get('categories', [CatalogController::class, 'categories']);
 Route::get('professionals', [ProfessionalController::class, 'index']);
 Route::get('professionals/{id}', [ProfessionalController::class, 'show'])->whereNumber('id');
+Route::get('professionals/{id}/slots', [ProfessionalSlotController::class, 'index'])->whereNumber('id');
 
 // Rutas autenticadas
 Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
@@ -48,5 +50,7 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::get('bookings', [BookingController::class, 'index']);
     Route::post('bookings', [BookingController::class, 'store']);
     Route::get('bookings/{booking}', [BookingController::class, 'show']);
+    Route::post('bookings/{booking}/accept', [BookingController::class, 'accept']);
+    Route::post('bookings/{booking}/reject', [BookingController::class, 'reject']);
     Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel']);
 });

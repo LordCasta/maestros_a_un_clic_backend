@@ -4,8 +4,11 @@ namespace App\Services;
 
 use App\Enums\BookingStatus;
 use App\Models\Booking;
+use App\Models\ProfessionalProfile;
 use App\Models\ProfessionalService;
 use App\Models\User;
+use App\Notifications\BookingAnswered;
+use App\Notifications\BookingRequested;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -16,13 +19,16 @@ use Illuminate\Validation\ValidationException;
  */
 class BookingService
 {
+    public function __construct(private readonly AvailabilityService $availability) {}
+
     /**
      * @param  array<string, mixed>  $data  Datos validados por StoreBookingRequest.
      */
     public function create(User $client, array $data): Booking
     {
         $service = ProfessionalService::with('professionalProfile.user')->findOrFail($data['professional_service_id']);
-        $professional = $service->professionalProfile->user;
+        $profile = $service->professionalProfile;
+        $professional = $profile->user;
 
         if (! $service->is_active || ! User::publiclyListed()->whereKey($professional->id)->exists()) {
             throw ValidationException::withMessages([
@@ -34,9 +40,22 @@ class BookingService
         $startsAt = Carbon::parse($data['starts_at'])->setTimezone(config('app.timezone'));
         $endsAt = $startsAt->copy()->addMinutes($service->estimated_duration_minutes);
 
-        $this->ensureSlotIsFree($professional, $startsAt, $endsAt, $service->professionalProfile->buffer_minutes);
+        if (! $this->availability->withinSchedule($profile, $startsAt, $endsAt)) {
+            throw ValidationException::withMessages([
+                'starts_at' => 'El profesional no atiende en ese horario. Elige una de las horas disponibles.',
+            ]);
+        }
 
-        return DB::transaction(function () use ($client, $professional, $service, $data, $startsAt, $endsAt) {
+        $booking = DB::transaction(function () use ($client, $professional, $profile, $service, $data, $startsAt, $endsAt) {
+            // Bloquea la agenda del profesional: dos solicitudes simultáneas no pueden tomar la misma hora.
+            ProfessionalProfile::whereKey($profile->id)->lockForUpdate()->first();
+
+            abort_if(
+                $this->availability->hasBookingConflict($profile, $startsAt, $endsAt),
+                409,
+                'El profesional ya tiene una reserva en ese horario.',
+            );
+
             $booking = Booking::create([
                 'client_id' => $client->id,
                 'professional_id' => $professional->id,
@@ -59,6 +78,32 @@ class BookingService
 
             return $booking;
         });
+
+        $professional->notify(new BookingRequested($booking));
+
+        return $booking;
+    }
+
+    /**
+     * HU004: el profesional acepta. Queda en `accepted` hasta que el cliente confirme (HU036).
+     */
+    public function accept(Booking $booking, User $by): Booking
+    {
+        $booking = $this->transition($booking, BookingStatus::Accepted, $by);
+        $booking->client->notify(new BookingAnswered($booking));
+
+        return $booking;
+    }
+
+    /**
+     * HU004: el profesional rechaza; la hora vuelve a quedar libre.
+     */
+    public function reject(Booking $booking, User $by, ?string $reason): Booking
+    {
+        $booking = $this->transition($booking, BookingStatus::Rejected, $by, $reason);
+        $booking->client->notify(new BookingAnswered($booking, $reason));
+
+        return $booking;
     }
 
     public function cancel(Booking $booking, User $by, string $reason): Booking
@@ -89,19 +134,5 @@ class BookingService
 
             return $booking;
         });
-    }
-
-    /**
-     * Evita que dos reservas activas del profesional se crucen, incluyendo su tiempo de descanso (HU003).
-     * El módulo de agenda amplía esta validación con el horario semanal y los bloqueos.
-     */
-    private function ensureSlotIsFree(User $professional, Carbon $startsAt, Carbon $endsAt, int $bufferMinutes): void
-    {
-        $taken = Booking::where('professional_id', $professional->id)
-            ->occupyingSchedule()
-            ->overlapping($startsAt->copy()->subMinutes($bufferMinutes), $endsAt->copy()->addMinutes($bufferMinutes))
-            ->exists();
-
-        abort_if($taken, 409, 'El profesional ya tiene una reserva en ese horario.');
     }
 }
