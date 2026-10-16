@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\BookingStatus;
 use App\Events\AvailabilityChanged;
+use App\Events\BookingStatusChanged;
 use App\Models\Booking;
 use App\Models\ProfessionalProfile;
 use App\Models\ProfessionalService;
@@ -182,6 +183,9 @@ class BookingService
 
             return $booking;
         });
+
+        // Quien tenga abierto el detalle ve el estado nuevo al instante (HU026).
+        BookingStatusChanged::dispatch($booking);
 
         // Rechazar o cancelar libera la hora: las horas libres de los clientes se actualizan (HU025).
         if ($from->occupiesSchedule() !== $to->occupiesSchedule()) {

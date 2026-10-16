@@ -83,7 +83,7 @@ Eventos (los que no tienen ✅ están planeados y se implementan en su módulo):
 | ✅ `availability.changed` (`App\Events\AvailabilityChanged`) | `professional.{id}.availability` | Agenda (HU003, HU025). Se emite al cambiar el horario o los bloqueos, al crear una reserva y cuando una reserva deja de ocupar agenda o vuelve a ocuparla. Datos: `{ "professional_id": 5 }` |
 | `message.sent` | `booking.{id}` | Chat |
 | `message.deleted` | `booking.{id}` | Chat |
-| `booking.status-changed` | `booking.{id}` | Ciclo de vida de la reserva |
+| ✅ `booking.status-changed` (`App\Events\BookingStatusChanged`) | `booking.{id}` | Ciclo de vida (HU026). Lo emite `BookingService::transition()` en cada cambio de estado. Datos: el mismo `BookingResource` de la API |
 | Notificaciones de Laravel | `App.Models.User.{id}` | Notificaciones |
 
 Las notificaciones (`app/Notifications`) usan los canales `database` y `broadcast`, y definen `databaseType()` y `broadcastType()` con el mismo nombre `recurso.accion` (p. ej. `booking.requested`). Así el frontend recibe la misma forma por el WebSocket y, con HU018, en `GET /notifications`. Tipos existentes: [api/endpoints.md § Notificaciones](api/endpoints.md#notificaciones).

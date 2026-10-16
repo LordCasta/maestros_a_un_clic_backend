@@ -8,6 +8,7 @@ use App\Http\Requests\ListBookingsRequest;
 use App\Http\Requests\RejectBookingRequest;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Resources\BookingResource;
+use App\Http\Resources\BookingStatusChangeResource;
 use App\Models\Booking;
 use App\Services\BookingService;
 use Illuminate\Http\JsonResponse;
@@ -52,6 +53,18 @@ class BookingController extends Controller
         $this->authorize('view', $booking);
 
         return $this->ok(new BookingResource($booking->load(self::RELATIONS)));
+    }
+
+    /**
+     * HU026: historial de cambios de estado, del más antiguo al más reciente.
+     */
+    public function history(Booking $booking): JsonResponse
+    {
+        $this->authorize('view', $booking);
+
+        $changes = $booking->statusChanges()->with('changedBy')->orderBy('created_at')->orderBy('id')->get();
+
+        return $this->ok(BookingStatusChangeResource::collection($changes));
     }
 
     public function accept(Request $request, Booking $booking): JsonResponse
