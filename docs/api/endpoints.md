@@ -291,6 +291,7 @@ Marca el intervalo como ocupado. `starts_at` debe ser futura y `ends_at` posteri
 | GET | `/bookings` | 🔑 | HU016, HU017 |
 | POST | `/bookings` | 👤 verificado | HU004 |
 | GET | `/bookings/{id}` | 🔑 participante o admin | HU026 |
+| GET | `/bookings/{id}/history` | 🔑 participante o admin | HU026 |
 | POST | `/bookings/{id}/accept` | 🛠 el profesional de la reserva | HU004 |
 | POST | `/bookings/{id}/reject` | 🛠 el profesional de la reserva | HU004 |
 | POST | `/bookings/{id}/confirm` | 👤 el cliente de la reserva | HU036 |
@@ -350,6 +351,24 @@ Paginado. El cliente ve las suyas, el profesional las suyas, el admin todas. Ord
   }
 }
 ```
+
+#### `GET /bookings/{id}/history`
+Cambios de estado de la reserva, del más antiguo al más reciente (`booking_status_changes`):
+```json
+{
+  "success": true,
+  "message": null,
+  "data": [
+    { "id": 1, "from_status": null, "to_status": "pending", "reason": null, "previous_starts_at": null,
+      "changed_by": { "id": 3, "name": "Camila Restrepo" }, "created_at": "2026-10-16T10:20:00-05:00" },
+    { "id": 2, "from_status": "pending", "to_status": "accepted", "reason": null, "previous_starts_at": null,
+      "changed_by": { "id": 5, "name": "Juan Castaño" }, "created_at": "2026-10-16T10:31:00-05:00" }
+  ]
+}
+```
+`reason` está en rechazos y cancelaciones; `previous_starts_at`, al reprogramar (HU012). **403** si no participa en la reserva (el admin sí la ve).
+
+Cada cambio de estado también se emite en tiempo real como `booking.status-changed` por el canal de la reserva (ver [../tiempo-real.md](../tiempo-real.md)).
 
 #### `POST /bookings/{id}/accept`
 Sin cuerpo. `pending` → `accepted`. La reserva queda **aceptada, no confirmada**: el cliente la confirma después (`POST /bookings/{id}/confirm`). Avisa al cliente con `booking.accepted`.
@@ -484,7 +503,6 @@ Implementado: ver Parte 1 § Agenda del profesional y § Profesionales (`/slots`
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
 | POST | `/bookings/{id}/reschedule` | 🔑 participante | HU012 |
-| GET | `/bookings/{id}/history` | 🔑 participante | HU026 |
 
 Todos usan `BookingService::transition()`.
 

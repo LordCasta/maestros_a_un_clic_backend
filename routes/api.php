@@ -59,6 +59,7 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::get('bookings', [BookingController::class, 'index']);
     Route::post('bookings', [BookingController::class, 'store']);
     Route::get('bookings/{booking}', [BookingController::class, 'show']);
+    Route::get('bookings/{booking}/history', [BookingController::class, 'history']);
     Route::post('bookings/{booking}/accept', [BookingController::class, 'accept']);
     Route::post('bookings/{booking}/reject', [BookingController::class, 'reject']);
     Route::post('bookings/{booking}/confirm', [BookingController::class, 'confirm']);
