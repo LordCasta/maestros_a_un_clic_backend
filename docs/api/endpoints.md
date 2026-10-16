@@ -294,6 +294,8 @@ Marca el intervalo como ocupado. `starts_at` debe ser futura y `ends_at` posteri
 | POST | `/bookings/{id}/accept` | 🛠 el profesional de la reserva | HU004 |
 | POST | `/bookings/{id}/reject` | 🛠 el profesional de la reserva | HU004 |
 | POST | `/bookings/{id}/confirm` | 👤 el cliente de la reserva | HU036 |
+| POST | `/bookings/{id}/start` | 🛠 el profesional de la reserva | HU027 |
+| POST | `/bookings/{id}/complete` | 🛠 el profesional de la reserva | HU028 |
 | POST | `/bookings/{id}/cancel` | 🔑 participante o admin | HU012 |
 
 #### `GET /bookings`
@@ -373,6 +375,18 @@ Sin cuerpo. `accepted` → `confirmed` (HU036): el cliente confirma después de 
 | **403** | No es el cliente de la reserva (`Solo el cliente de la reserva puede confirmarla.`) |
 | **409** | La reserva no está en `accepted` (todavía pendiente, ya confirmada, cancelada…) |
 
+#### `POST /bookings/{id}/start`
+Sin cuerpo. `confirmed` → `in_progress` (HU027) y guarda `started_at`. Solo **desde la hora pactada** (`starts_at`). Avisa al cliente con `booking.started`.
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `message: "Servicio iniciado."` |
+| **403** | No es el profesional de la reserva (`Solo el profesional de la reserva puede iniciar o finalizar el servicio.`) |
+| **409** | Todavía no es la hora (`Solo puedes iniciar el servicio desde la hora programada (17 de octubre, 9:00 a. m.).`) o la reserva no está en `confirmed` |
+
+#### `POST /bookings/{id}/complete`
+Sin cuerpo. `in_progress` → `completed` (HU028) y guarda `completed_at`. Desde ese estado se puede calificar (`POST /bookings/{id}/review`, HU005). Avisa al cliente con `booking.completed`. **403** igual que `start`; **409** si la reserva no está en `in_progress`.
+
 #### `POST /bookings/{id}/cancel`
 ```json
 { "reason": "Tengo una emergencia familiar." }
@@ -391,6 +405,8 @@ Se guardan en la tabla `notifications` y llegan al instante por el canal privado
 | `booking.accepted` | Cliente | El profesional acepta (HU004) |
 | `booking.rejected` | Cliente | El profesional rechaza (HU004) |
 | `booking.confirmed` | Profesional | El cliente confirma (HU036) |
+| `booking.started` | Cliente | El profesional inicia el servicio (HU027) |
+| `booking.completed` | Cliente | El profesional finaliza el servicio (HU028); invita a calificar |
 
 Datos (los mismos en la base y en el WebSocket):
 ```json
@@ -468,8 +484,6 @@ Implementado: ver Parte 1 § Agenda del profesional y § Profesionales (`/slots`
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
 | POST | `/bookings/{id}/reschedule` | 🔑 participante | HU012 |
-| POST | `/bookings/{id}/start` | 🛠 | HU027 |
-| POST | `/bookings/{id}/complete` | 🛠 | HU028 |
 | GET | `/bookings/{id}/history` | 🔑 participante | HU026 |
 
 Todos usan `BookingService::transition()`.

@@ -81,6 +81,24 @@ class BookingController extends Controller
         return $this->ok(new BookingResource($booking->load(self::RELATIONS)), 'Reserva confirmada.');
     }
 
+    public function start(Request $request, Booking $booking): JsonResponse
+    {
+        $this->authorize('work', $booking);
+
+        $booking = $this->bookings->start($booking, $request->user());
+
+        return $this->ok(new BookingResource($booking->load(self::RELATIONS)), 'Servicio iniciado.');
+    }
+
+    public function complete(Request $request, Booking $booking): JsonResponse
+    {
+        $this->authorize('work', $booking);
+
+        $booking = $this->bookings->complete($booking, $request->user());
+
+        return $this->ok(new BookingResource($booking->load(self::RELATIONS)), 'Servicio finalizado.');
+    }
+
     public function cancel(CancelBookingRequest $request, Booking $booking): JsonResponse
     {
         $this->authorize('cancel', $booking);

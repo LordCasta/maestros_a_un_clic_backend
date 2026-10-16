@@ -10,6 +10,7 @@ use App\Models\ProfessionalService;
 use App\Models\User;
 use App\Notifications\BookingAnswered;
 use App\Notifications\BookingConfirmed;
+use App\Notifications\BookingProgressed;
 use App\Notifications\BookingRequested;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -120,6 +121,35 @@ class BookingService
         return $booking;
     }
 
+    /**
+     * HU027: el profesional inicia el servicio, desde la hora pactada.
+     */
+    public function start(Booking $booking, User $by): Booking
+    {
+        abort_if(
+            Carbon::now()->lt($booking->starts_at),
+            409,
+            'Solo puedes iniciar el servicio desde la hora programada ('
+                .$booking->starts_at->copy()->locale('es')->isoFormat('D [de] MMMM, h:mm a').').',
+        );
+
+        $booking = $this->transition($booking, BookingStatus::InProgress, $by, attributes: ['started_at' => Carbon::now()]);
+        $booking->client->notify(new BookingProgressed($booking));
+
+        return $booking;
+    }
+
+    /**
+     * HU028: el profesional finaliza el servicio; desde ahí se puede calificar (HU005).
+     */
+    public function complete(Booking $booking, User $by): Booking
+    {
+        $booking = $this->transition($booking, BookingStatus::Completed, $by, attributes: ['completed_at' => Carbon::now()]);
+        $booking->client->notify(new BookingProgressed($booking));
+
+        return $booking;
+    }
+
     public function cancel(Booking $booking, User $by, string $reason): Booking
     {
         return $this->transition($booking, BookingStatus::Cancelled, $by, $reason);
@@ -127,8 +157,10 @@ class BookingService
 
     /**
      * Cambia el estado validando la transición y registra el cambio en booking_status_changes.
+     *
+     * @param  array<string, mixed>  $attributes  Otros campos que cambian junto con el estado (p. ej. started_at).
      */
-    public function transition(Booking $booking, BookingStatus $to, User $by, ?string $reason = null): Booking
+    public function transition(Booking $booking, BookingStatus $to, User $by, ?string $reason = null, array $attributes = []): Booking
     {
         abort_unless(
             $booking->status->canTransitionTo($to),
@@ -138,7 +170,7 @@ class BookingService
 
         $from = $booking->status;
 
-        $booking = DB::transaction(function () use ($booking, $to, $by, $reason) {
+        $booking = DB::transaction(function () use ($booking, $to, $by, $reason, $attributes) {
             $booking->statusChanges()->create([
                 'from_status' => $booking->status,
                 'to_status' => $to,
@@ -146,7 +178,7 @@ class BookingService
                 'reason' => $reason,
             ]);
 
-            $booking->update(['status' => $to]);
+            $booking->update(['status' => $to] + $attributes);
 
             return $booking;
         });
