@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\BookingStatus;
+use App\Events\AvailabilityChanged;
 use App\Models\Booking;
 use App\Models\ProfessionalProfile;
 use App\Models\ProfessionalService;
@@ -81,6 +82,7 @@ class BookingService
         });
 
         $professional->notify(new BookingRequested($booking));
+        AvailabilityChanged::dispatch($professional->id);
 
         return $booking;
     }
@@ -134,7 +136,9 @@ class BookingService
             "No se puede pasar una reserva de '{$booking->status->value}' a '{$to->value}'.",
         );
 
-        return DB::transaction(function () use ($booking, $to, $by, $reason) {
+        $from = $booking->status;
+
+        $booking = DB::transaction(function () use ($booking, $to, $by, $reason) {
             $booking->statusChanges()->create([
                 'from_status' => $booking->status,
                 'to_status' => $to,
@@ -146,5 +150,12 @@ class BookingService
 
             return $booking;
         });
+
+        // Rechazar o cancelar libera la hora: las horas libres de los clientes se actualizan (HU025).
+        if ($from->occupiesSchedule() !== $to->occupiesSchedule()) {
+            AvailabilityChanged::dispatch($booking->professional_id);
+        }
+
+        return $booking;
     }
 }

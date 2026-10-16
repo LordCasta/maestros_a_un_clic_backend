@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\FavoriteController;
@@ -44,6 +45,14 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
         Route::get('favorites', [FavoriteController::class, 'index']);
         Route::post('favorites/{professionalId}', [FavoriteController::class, 'store'])->whereNumber('professionalId');
         Route::delete('favorites/{professionalId}', [FavoriteController::class, 'destroy'])->whereNumber('professionalId');
+    });
+
+    // Agenda del profesional (HU003)
+    Route::middleware('role:professional')->prefix('professional/availability')->group(function () {
+        Route::get('/', [AvailabilityController::class, 'show']);
+        Route::put('rules', [AvailabilityController::class, 'updateRules']);
+        Route::post('blocks', [AvailabilityController::class, 'storeBlock']);
+        Route::delete('blocks/{block}', [AvailabilityController::class, 'destroyBlock']);
     });
 
     // Reservas
