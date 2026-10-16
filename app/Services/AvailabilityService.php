@@ -2,11 +2,13 @@
 
 namespace App\Services;
 
+use App\Events\AvailabilityChanged;
 use App\Models\AvailabilityBlock;
 use App\Models\Booking;
 use App\Models\ProfessionalProfile;
 use App\Models\ProfessionalService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Disponibilidad real de un profesional (HU003, HU025): su horario semanal (availability_rules),
@@ -79,6 +81,58 @@ class AvailabilityService
                 $endsAt->copy()->addMinutes($profile->buffer_minutes),
             )
             ->exists();
+    }
+
+    /**
+     * HU003: reemplaza el horario semanal completo y el descanso entre servicios.
+     * Las reservas ya hechas no cambian aunque queden fuera del horario nuevo.
+     *
+     * @param  list<array{weekday: int, start_time: string, end_time: string}>  $rules
+     */
+    public function replaceRules(ProfessionalProfile $profile, array $rules, int $bufferMinutes): void
+    {
+        DB::transaction(function () use ($profile, $rules, $bufferMinutes) {
+            $profile->update(['buffer_minutes' => $bufferMinutes]);
+            $profile->availabilityRules()->delete();
+            $profile->availabilityRules()->createMany($rules);
+        });
+
+        AvailabilityChanged::dispatch($profile->user_id);
+    }
+
+    /**
+     * HU003: marca un intervalo como ocupado. No se puede bloquear encima de una reserva activa:
+     * primero hay que cancelarla o reprogramarla.
+     *
+     * @param  array{starts_at: string, ends_at: string, reason?: string|null}  $data
+     */
+    public function addBlock(ProfessionalProfile $profile, array $data): AvailabilityBlock
+    {
+        $startsAt = Carbon::parse($data['starts_at'])->setTimezone(config('app.timezone'));
+        $endsAt = Carbon::parse($data['ends_at'])->setTimezone(config('app.timezone'));
+
+        abort_if(
+            Booking::where('professional_id', $profile->user_id)->occupyingSchedule()->overlapping($startsAt, $endsAt)->exists(),
+            409,
+            'Tienes reservas activas en ese horario. Cancélalas o reprográmalas antes de bloquearlo.',
+        );
+
+        $block = $profile->availabilityBlocks()->create([
+            'starts_at' => $startsAt,
+            'ends_at' => $endsAt,
+            'reason' => $data['reason'] ?? null,
+        ]);
+
+        AvailabilityChanged::dispatch($profile->user_id);
+
+        return $block;
+    }
+
+    public function removeBlock(AvailabilityBlock $block): void
+    {
+        $block->delete();
+
+        AvailabilityChanged::dispatch($block->professionalProfile->user_id);
     }
 
     /**

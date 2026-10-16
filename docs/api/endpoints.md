@@ -216,6 +216,74 @@ Un día sin horario devuelve `slots: []`. **404** si el profesional no es visibl
 
 ---
 
+### Agenda del profesional (🛠 solo profesionales, HU003)
+
+| Método | Ruta | HU |
+|--------|------|----|
+| GET | `/professional/availability` | HU003 |
+| PUT | `/professional/availability/rules` | HU003 |
+| POST | `/professional/availability/blocks` | HU003 |
+| DELETE | `/professional/availability/blocks/{id}` | HU003 |
+
+La agenda la usa `GET /professionals/{id}/slots` para calcular las horas libres. Cada cambio emite `availability.changed` por el canal público `professional.{id}.availability`, y los clientes que estén viendo las horas libres las vuelven a pedir (ver [../tiempo-real.md](../tiempo-real.md)).
+
+#### `GET /professional/availability`
+```json
+{
+  "success": true,
+  "message": null,
+  "data": {
+    "buffer_minutes": 30,
+    "rules": [
+      { "id": 1, "weekday": 1, "start_time": "08:00", "end_time": "12:00" },
+      { "id": 2, "weekday": 1, "start_time": "14:00", "end_time": "18:00" }
+    ],
+    "blocks": [
+      { "id": 4, "starts_at": "2026-10-20T09:00:00-05:00", "ends_at": "2026-10-20T11:00:00-05:00", "reason": "Cita médica" }
+    ]
+  }
+}
+```
+- `weekday`: 0 = domingo … 6 = sábado. Horas en `H:i`, hora de Colombia.
+- `blocks`: solo los que aún no terminan.
+
+#### `PUT /professional/availability/rules`
+Reemplaza el horario semanal **completo** y el descanso entre servicios. Las reservas que ya existen no cambian aunque queden fuera del horario nuevo.
+```json
+{
+  "buffer_minutes": 30,
+  "rules": [
+    { "weekday": 1, "start_time": "08:00", "end_time": "12:00" },
+    { "weekday": 1, "start_time": "14:00", "end_time": "18:00" }
+  ]
+}
+```
+| Campo | Regla |
+|-------|-------|
+| `buffer_minutes` | 0 a 240. Descanso que se bloquea antes y después de cada reserva |
+| `rules` | Obligatorio; puede ser `[]` (no atiende ningún día). Máx. 28 franjas |
+| `rules.*.end_time` | Después de `start_time` |
+| Franjas del mismo día | No pueden cruzarse: **422** en `rules.N.start_time` (`Esta franja se cruza con otra del mismo día.`) |
+
+**200**: `message: "Horario guardado."` y `data` con la misma forma que el `GET`.
+
+#### `POST /professional/availability/blocks`
+```json
+{ "starts_at": "2026-10-20T09:00:00-05:00", "ends_at": "2026-10-20T11:00:00-05:00", "reason": "Cita médica" }
+```
+Marca el intervalo como ocupado. `starts_at` debe ser futura y `ends_at` posterior; `reason` es opcional (máx. 255).
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **201** | `message: "Horas bloqueadas."`, `data`: el bloqueo |
+| **409** | Hay reservas activas en ese intervalo (`Tienes reservas activas en ese horario. Cancélalas o reprográmalas antes de bloquearlo.`) |
+| **422** | Fechas inválidas |
+
+#### `DELETE /professional/availability/blocks/{id}`
+**200** con `data: null`. **403** si el bloqueo es de otro profesional.
+
+---
+
 ### Reservas
 
 | Método | Ruta | Acceso | HU |
@@ -393,14 +461,7 @@ Rutas y responsables acordados antes de implementar. Al implementar un endpoint 
 
 ### Módulo: Agenda y disponibilidad
 
-| Método | Ruta | Acceso | HU |
-|--------|------|--------|----|
-| GET | `/professional/availability` | 🛠 | HU003 |
-| PUT | `/professional/availability/rules` | 🛠 | HU003 |
-| POST | `/professional/availability/blocks` | 🛠 | HU003 |
-| DELETE | `/professional/availability/blocks/{id}` | 🛠 | HU003 |
-
-`GET /professionals/{id}/slots` ya está implementado (ver Parte 1 § Profesionales), igual que la validación de horario y bloqueos al reservar (`AvailabilityService`). Falta la gestión del horario por el profesional.
+Implementado: ver Parte 1 § Agenda del profesional y § Profesionales (`/slots`). Falta `available_now` en la búsqueda (HU030, módulo Búsqueda).
 
 ### Módulo: Ciclo de vida de la reserva
 

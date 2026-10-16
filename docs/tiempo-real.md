@@ -41,6 +41,7 @@ Definidos en `routes/channels.php`. Autenticación en `POST /api/v1/broadcasting
 |------------------------------|------|-------------|----------|
 | `booking.{id}` | Presencia | Cliente y profesional de la reserva (`App\Broadcasting\BookingChannel`) | Mensajes del chat, cambios de estado de la reserva y quién está en línea |
 | `App.Models.User.{id}` | Privado | El propio usuario | Notificaciones (`$user->notify(...)` con canal `broadcast`) |
+| `professional.{id}.availability` | Público | Cualquiera (sin autorización) | Avisa que cambió la agenda del profesional `{id}`: el cliente vuelve a pedir las horas libres. No lleva datos personales |
 
 Un canal de presencia sirve a la vez para eventos y para saber quién está conectado, por eso el chat no necesita un canal aparte para el estado en línea.
 
@@ -75,10 +76,11 @@ class MessageSent implements ShouldBroadcast
 }
 ```
 
-Eventos planeados (se implementan en sus módulos):
+Eventos (los que no tienen ✅ están planeados y se implementan en su módulo):
 
 | Evento | Canal | Módulo |
 |--------|-------|--------|
+| ✅ `availability.changed` (`App\Events\AvailabilityChanged`) | `professional.{id}.availability` | Agenda (HU003, HU025). Se emite al cambiar el horario o los bloqueos, al crear una reserva y cuando una reserva deja de ocupar agenda o vuelve a ocuparla. Datos: `{ "professional_id": 5 }` |
 | `message.sent` | `booking.{id}` | Chat |
 | `message.deleted` | `booking.{id}` | Chat |
 | `booking.status-changed` | `booking.{id}` | Ciclo de vida de la reserva |
