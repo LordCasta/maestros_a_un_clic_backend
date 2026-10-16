@@ -52,6 +52,16 @@ class BookingPolicy
     }
 
     /**
+     * HU027, HU028: solo el profesional de la reserva inicia y finaliza el servicio.
+     */
+    public function work(User $user, Booking $booking): Response
+    {
+        return $user->id === $booking->professional_id
+            ? Response::allow()
+            : Response::deny('Solo el profesional de la reserva puede iniciar o finalizar el servicio.');
+    }
+
+    /**
      * HU012: cliente o profesional pueden cancelar.
      */
     public function cancel(User $user, Booking $booking): bool

@@ -7,6 +7,7 @@ use App\Models\Booking;
 use App\Models\User;
 use App\Notifications\BookingAnswered;
 use App\Notifications\BookingConfirmed;
+use App\Notifications\BookingProgressed;
 use App\Notifications\BookingRequested;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
@@ -345,6 +346,91 @@ describe('confirming a booking', function () {
         $booking = Booking::factory()->status(BookingStatus::Accepted)->create();
 
         $this->postJson("/api/v1/bookings/{$booking->id}/confirm")->assertUnauthorized();
+    });
+});
+
+describe('starting and completing the service', function () {
+    afterEach(fn () => Carbon::setTestNow());
+
+    it('lets the professional start at the scheduled time and notifies the client', function () {
+        Notification::fake();
+        $startsAt = Carbon::tomorrow()->setTime(10, 0);
+        $booking = Booking::factory()->status(BookingStatus::Confirmed)->create([
+            'starts_at' => $startsAt,
+            'ends_at' => $startsAt->copy()->addHour(),
+        ]);
+        Carbon::setTestNow($startsAt);
+        Sanctum::actingAs($booking->professional);
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/start")
+            ->assertOk()
+            ->assertJsonPath('message', 'Servicio iniciado.')
+            ->assertJsonPath('data.status', 'in_progress')
+            ->assertJsonPath('data.started_at', $startsAt->toIso8601String());
+
+        $this->assertDatabaseHas('booking_status_changes', ['booking_id' => $booking->id, 'from_status' => 'confirmed', 'to_status' => 'in_progress']);
+        Notification::assertSentTo($booking->client, BookingProgressed::class,
+            fn (BookingProgressed $notification) => $notification->databaseType($booking->client) === 'booking.started');
+    });
+
+    it('does not start before the scheduled time', function () {
+        $startsAt = Carbon::tomorrow()->setTime(10, 0);
+        $booking = Booking::factory()->status(BookingStatus::Confirmed)->create([
+            'starts_at' => $startsAt,
+            'ends_at' => $startsAt->copy()->addHour(),
+        ]);
+        Carbon::setTestNow($startsAt->copy()->subMinute());
+        Sanctum::actingAs($booking->professional);
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/start")
+            ->assertConflict()
+            ->assertJsonPath('message', fn (string $message) => str_starts_with($message, 'Solo puedes iniciar el servicio desde la hora programada'));
+
+        $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'status' => 'confirmed', 'started_at' => null]);
+    });
+
+    it('only starts confirmed bookings', function () {
+        $booking = Booking::factory()->status(BookingStatus::Accepted)->create(['starts_at' => Carbon::now()->subHour()]);
+        Sanctum::actingAs($booking->professional);
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/start")->assertConflict();
+    });
+
+    it('lets the professional complete the service, enabling the review, and notifies the client', function () {
+        Notification::fake();
+        $booking = Booking::factory()->status(BookingStatus::InProgress)->create(['starts_at' => Carbon::now()->subHour()]);
+        Sanctum::actingAs($booking->professional);
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/complete")
+            ->assertOk()
+            ->assertJsonPath('message', 'Servicio finalizado.')
+            ->assertJsonPath('data.status', 'completed')
+            ->assertJsonPath('data.completed_at', fn (?string $at) => $at !== null);
+
+        $this->assertDatabaseHas('booking_status_changes', ['booking_id' => $booking->id, 'from_status' => 'in_progress', 'to_status' => 'completed']);
+        Notification::assertSentTo($booking->client, BookingProgressed::class,
+            fn (BookingProgressed $notification) => $notification->databaseType($booking->client) === 'booking.completed'
+                && str_contains($notification->toArray($booking->client)['body'], 'calificando'));
+    });
+
+    it('only completes a service in progress', function () {
+        $booking = Booking::factory()->status(BookingStatus::Confirmed)->create();
+        Sanctum::actingAs($booking->professional);
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/complete")->assertConflict();
+    });
+
+    it('only lets the professional of the booking start or complete it', function () {
+        $booking = Booking::factory()->status(BookingStatus::Confirmed)->create(['starts_at' => Carbon::now()->subHour()]);
+
+        Sanctum::actingAs($booking->client);
+        $this->postJson("/api/v1/bookings/{$booking->id}/start")
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Solo el profesional de la reserva puede iniciar o finalizar el servicio.');
+
+        Sanctum::actingAs(User::factory()->professional()->verified()->create());
+        $this->postJson("/api/v1/bookings/{$booking->id}/start")->assertForbidden();
+        $this->postJson("/api/v1/bookings/{$booking->id}/complete")->assertForbidden();
     });
 });
 
