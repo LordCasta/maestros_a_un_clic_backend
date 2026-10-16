@@ -71,10 +71,12 @@ class AvailabilityService
 
     /**
      * Otra reserva activa del profesional se cruza con [$startsAt, $endsAt), contando su descanso.
+     * Al reprogramar (HU012) se ignora la propia reserva con $ignoreBookingId.
      */
-    public function hasBookingConflict(ProfessionalProfile $profile, Carbon $startsAt, Carbon $endsAt): bool
+    public function hasBookingConflict(ProfessionalProfile $profile, Carbon $startsAt, Carbon $endsAt, ?int $ignoreBookingId = null): bool
     {
         return Booking::where('professional_id', $profile->user_id)
+            ->when($ignoreBookingId, fn ($q, $id) => $q->whereKeyNot($id))
             ->occupyingSchedule()
             ->overlapping(
                 $startsAt->copy()->subMinutes($profile->buffer_minutes),

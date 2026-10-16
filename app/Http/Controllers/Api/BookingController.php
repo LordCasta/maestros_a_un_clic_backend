@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CancelBookingRequest;
 use App\Http\Requests\ListBookingsRequest;
 use App\Http\Requests\RejectBookingRequest;
+use App\Http\Requests\RescheduleBookingRequest;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Http\Resources\BookingStatusChangeResource;
@@ -110,6 +111,18 @@ class BookingController extends Controller
         $booking = $this->bookings->complete($booking, $request->user());
 
         return $this->ok(new BookingResource($booking->load(self::RELATIONS)), 'Servicio finalizado.');
+    }
+
+    public function reschedule(RescheduleBookingRequest $request, Booking $booking): JsonResponse
+    {
+        $this->authorize('reschedule', $booking);
+
+        $booking = $this->bookings->reschedule($booking, $request->user(), $request->validated('starts_at'));
+
+        return $this->ok(
+            new BookingResource($booking->load(self::RELATIONS)),
+            'Reserva reprogramada. El profesional debe aceptar el nuevo horario.',
+        );
     }
 
     public function cancel(CancelBookingRequest $request, Booking $booking): JsonResponse

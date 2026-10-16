@@ -263,7 +263,8 @@ stateDiagram-v2
     pending --> cancelled: cualquiera, con motivo
     accepted --> cancelled
     confirmed --> cancelled
-    accepted --> pending: reprogramar (HU012)
+    pending --> pending: reprogramar (HU012)
+    accepted --> pending: reprogramar
     confirmed --> pending: reprogramar
     confirmed --> in_progress: profesional inicia, desde la hora pactada (HU027)
     in_progress --> completed: profesional finaliza (HU028)
@@ -273,7 +274,7 @@ stateDiagram-v2
 ```
 
 - **Ocupan agenda** las reservas en `pending`, `accepted`, `confirmed` e `in_progress`. Cancelar o rechazar libera el bloque (HU012).
-- **Reprogramar** no es un estado final: cambia `starts_at`, vuelve a `pending` para que el profesional acepte el nuevo horario, y guarda la fecha anterior en `booking_status_changes`.
+- **Reprogramar** no es un estado final: cambia `starts_at`, vuelve a `pending` para que el profesional acepte el nuevo horario, y guarda la fecha anterior en `booking_status_changes.previous_starts_at`. Se puede desde `pending`, `accepted` o `confirmed` y solo antes de la hora programada; cancelar, también solo antes de esa hora (el admin, siempre).
 
 ## 4. Trazabilidad historia de usuario → tablas
 

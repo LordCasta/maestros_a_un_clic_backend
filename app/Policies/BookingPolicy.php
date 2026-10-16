@@ -62,6 +62,14 @@ class BookingPolicy
     }
 
     /**
+     * HU012: cliente o profesional pueden reprogramar.
+     */
+    public function reschedule(User $user, Booking $booking): bool
+    {
+        return $booking->involves($user);
+    }
+
+    /**
      * HU012: cliente o profesional pueden cancelar.
      */
     public function cancel(User $user, Booking $booking): bool
