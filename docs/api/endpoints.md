@@ -288,7 +288,8 @@ Marca el intervalo como ocupado. `starts_at` debe ser futura y `ends_at` posteri
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| GET | `/bookings` | 🔑 | HU016, HU017 |
+| GET | `/bookings` | 🔑 | HU016, HU017, HU049 |
+| GET | `/bookings/summary` | 🔑 | HU017 |
 | POST | `/bookings` | 👤 verificado | HU004 |
 | GET | `/bookings/{id}` | 🔑 participante o admin | HU026 |
 | GET | `/bookings/{id}/history` | 🔑 participante o admin | HU026 |
@@ -304,8 +305,17 @@ Paginado. El cliente ve las suyas, el profesional las suyas, el admin todas. Ord
 
 | Query | Descripción |
 |-------|-------------|
-| `status` | Un estado (`pending`, `accepted`…). `?status=pending` son las solicitudes por responder del panel del profesional |
+| `status` | Uno o varios estados separados por coma: `?status=pending` (solicitudes por responder), `?status=cancelled,rejected`, `?status=in_progress` (servicios en curso, HU049) |
 | `page`, `per_page` | Paginación (`per_page` máx. 50) |
+
+#### `GET /bookings/summary`
+Cuántas reservas tiene el usuario en cada estado, con el mismo alcance que el listado (el admin, todas). Siempre trae los siete estados:
+```json
+{ "success": true, "message": null, "data": {
+  "total": 16,
+  "by_status": { "pending": 2, "accepted": 0, "rejected": 1, "confirmed": 3, "in_progress": 0, "completed": 9, "cancelled": 1 }
+} }
+```
 
 #### `POST /bookings`
 ```json

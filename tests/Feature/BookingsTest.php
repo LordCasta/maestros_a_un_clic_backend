@@ -4,6 +4,7 @@ use App\Enums\BookingStatus;
 use App\Models\AvailabilityBlock;
 use App\Models\AvailabilityRule;
 use App\Models\Booking;
+use App\Models\Category;
 use App\Models\User;
 use App\Notifications\BookingAnswered;
 use App\Notifications\BookingConfirmed;
@@ -192,7 +193,45 @@ describe('listing and viewing bookings', function () {
             ->assertJsonCount(1, 'data')
             ->assertJsonPath('data.0.id', $pending->id);
 
-        $this->getJson('/api/v1/bookings?status=unknown')->assertJsonValidationErrors(['status']);
+        $this->getJson('/api/v1/bookings?status=unknown')->assertJsonValidationErrors(['status.0']);
+    });
+
+    it('filters by several statuses at once', function () {
+        $professional = User::factory()->professional()->verified()->create();
+        $service = $professional->professionalProfile->services()->create([
+            'category_id' => Category::factory()->create()->id,
+            'title' => 'Revisión', 'price_type' => 'fixed', 'price' => 50000, 'estimated_duration_minutes' => 60,
+        ]);
+        foreach ([BookingStatus::Completed, BookingStatus::Cancelled, BookingStatus::Rejected, BookingStatus::Confirmed] as $status) {
+            Booking::factory()->status($status)->for($service, 'service')->create();
+        }
+        Sanctum::actingAs($professional);
+
+        $this->getJson('/api/v1/bookings?status=cancelled,rejected')
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('meta.total', 2);
+    });
+
+    it('summarizes the bookings of the user by status', function () {
+        $professional = User::factory()->professional()->verified()->create();
+        $service = $professional->professionalProfile->services()->create([
+            'category_id' => Category::factory()->create()->id,
+            'title' => 'Revisión', 'price_type' => 'fixed', 'price' => 50000, 'estimated_duration_minutes' => 60,
+        ]);
+        Booking::factory()->count(3)->status(BookingStatus::Completed)->for($service, 'service')->create();
+        Booking::factory()->status(BookingStatus::Cancelled)->for($service, 'service')->create();
+        Booking::factory()->status(BookingStatus::Completed)->create(); // de otro profesional
+
+        Sanctum::actingAs($professional);
+        $this->getJson('/api/v1/bookings/summary')
+            ->assertOk()
+            ->assertJsonPath('data.total', 4)
+            ->assertJsonPath('data.by_status.completed', 3)
+            ->assertJsonPath('data.by_status.cancelled', 1)
+            ->assertJsonPath('data.by_status.pending', 0);
+
+        $this->getJson('/api/v1/bookings/summary')->assertJsonCount(count(BookingStatus::cases()), 'data.by_status');
     });
 
     it('forbids viewing a booking of someone else', function () {

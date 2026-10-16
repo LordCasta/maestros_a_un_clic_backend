@@ -79,6 +79,16 @@ class Booking extends Model
     }
 
     /**
+     * Las reservas que ve un usuario: el cliente y el profesional, las suyas; el admin, todas.
+     */
+    public function scopeVisibleTo(Builder $query, User $user): void
+    {
+        $query
+            ->when($user->isClient(), fn ($q) => $q->where('client_id', $user->id))
+            ->when($user->isProfessional(), fn ($q) => $q->where('professional_id', $user->id));
+    }
+
+    /**
      * Reservas que ocupan agenda (ver BookingStatus::occupyingSchedule).
      */
     public function scopeOccupyingSchedule(Builder $query): void
