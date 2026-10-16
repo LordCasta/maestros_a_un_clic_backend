@@ -6,6 +6,7 @@ use App\Models\AvailabilityRule;
 use App\Models\Booking;
 use App\Models\User;
 use App\Notifications\BookingAnswered;
+use App\Notifications\BookingConfirmed;
 use App\Notifications\BookingRequested;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Notification;
@@ -283,6 +284,67 @@ describe('answering a request', function () {
         $booking = Booking::factory()->create();
 
         $this->postJson("/api/v1/bookings/{$booking->id}/accept")->assertUnauthorized();
+    });
+});
+
+describe('confirming a booking', function () {
+    it('lets the client confirm an accepted booking and notifies the professional', function () {
+        Notification::fake();
+        $booking = Booking::factory()->status(BookingStatus::Accepted)->create();
+        Sanctum::actingAs($booking->client);
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/confirm")
+            ->assertOk()
+            ->assertJsonPath('message', 'Reserva confirmada.')
+            ->assertJsonPath('data.status', 'confirmed');
+
+        $this->assertDatabaseHas('booking_status_changes', [
+            'booking_id' => $booking->id,
+            'from_status' => 'accepted',
+            'to_status' => 'confirmed',
+            'changed_by' => $booking->client_id,
+        ]);
+        Notification::assertSentTo($booking->professional, BookingConfirmed::class,
+            fn (BookingConfirmed $notification, array $channels) => $channels === ['database', 'broadcast']
+                && $notification->databaseType($booking->professional) === 'booking.confirmed');
+    });
+
+    it('does not confirm before the professional accepts', function () {
+        Notification::fake();
+        $booking = Booking::factory()->create();
+        Sanctum::actingAs($booking->client);
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/confirm")->assertConflict();
+
+        $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'status' => 'pending']);
+        Notification::assertNothingSent();
+    });
+
+    it('does not confirm twice', function () {
+        $booking = Booking::factory()->status(BookingStatus::Confirmed)->create();
+        Sanctum::actingAs($booking->client);
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/confirm")->assertConflict();
+    });
+
+    it('only lets the client of the booking confirm', function () {
+        $booking = Booking::factory()->status(BookingStatus::Accepted)->create();
+
+        Sanctum::actingAs($booking->professional);
+        $this->postJson("/api/v1/bookings/{$booking->id}/confirm")
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Solo el cliente de la reserva puede confirmarla.');
+
+        Sanctum::actingAs(User::factory()->client()->verified()->create());
+        $this->postJson("/api/v1/bookings/{$booking->id}/confirm")->assertForbidden();
+
+        $this->assertDatabaseHas('bookings', ['id' => $booking->id, 'status' => 'accepted']);
+    });
+
+    it('requires authentication to confirm', function () {
+        $booking = Booking::factory()->status(BookingStatus::Accepted)->create();
+
+        $this->postJson("/api/v1/bookings/{$booking->id}/confirm")->assertUnauthorized();
     });
 });
 

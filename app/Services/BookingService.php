@@ -8,6 +8,7 @@ use App\Models\ProfessionalProfile;
 use App\Models\ProfessionalService;
 use App\Models\User;
 use App\Notifications\BookingAnswered;
+use App\Notifications\BookingConfirmed;
 use App\Notifications\BookingRequested;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -102,6 +103,17 @@ class BookingService
     {
         $booking = $this->transition($booking, BookingStatus::Rejected, $by, $reason);
         $booking->client->notify(new BookingAnswered($booking, $reason));
+
+        return $booking;
+    }
+
+    /**
+     * HU036: el cliente confirma una reserva aceptada; queda en la agenda del profesional.
+     */
+    public function confirm(Booking $booking, User $by): Booking
+    {
+        $booking = $this->transition($booking, BookingStatus::Confirmed, $by);
+        $booking->professional->notify(new BookingConfirmed($booking));
 
         return $booking;
     }

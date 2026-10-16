@@ -42,6 +42,16 @@ class BookingPolicy
     }
 
     /**
+     * HU036: solo el cliente de la reserva la confirma.
+     */
+    public function confirm(User $user, Booking $booking): Response
+    {
+        return $user->id === $booking->client_id
+            ? Response::allow()
+            : Response::deny('Solo el cliente de la reserva puede confirmarla.');
+    }
+
+    /**
      * HU012: cliente o profesional pueden cancelar.
      */
     public function cancel(User $user, Booking $booking): bool
