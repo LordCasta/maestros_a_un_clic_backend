@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\BookingStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CancelBookingRequest;
 use App\Http\Requests\ListBookingsRequest;
@@ -27,17 +28,36 @@ class BookingController extends Controller
      */
     public function index(ListBookingsRequest $request): JsonResponse
     {
-        $user = $request->user();
-
         $paginator = Booking::query()
-            ->when($user->isClient(), fn ($q) => $q->where('client_id', $user->id))
-            ->when($user->isProfessional(), fn ($q) => $q->where('professional_id', $user->id))
-            ->when($request->validated('status'), fn ($q, $status) => $q->where('status', $status))
+            ->visibleTo($request->user())
+            ->when($request->validated('status'), fn ($q, array $statuses) => $q->whereIn('status', $statuses))
             ->with(self::RELATIONS)
             ->orderByDesc('starts_at')
             ->paginate((int) $request->validated('per_page', 15));
 
         return $this->paginated(BookingResource::collection($paginator), $paginator);
+    }
+
+    /**
+     * HU017: cuántas reservas tiene el usuario en cada estado (total de servicios realizados,
+     * cancelados, próximos…). Mismo alcance que el listado.
+     */
+    public function summary(Request $request): JsonResponse
+    {
+        $counts = Booking::query()
+            ->visibleTo($request->user())
+            ->toBase()
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        $byStatus = collect(BookingStatus::cases())
+            ->mapWithKeys(fn (BookingStatus $status) => [$status->value => (int) ($counts[$status->value] ?? 0)]);
+
+        return $this->ok([
+            'total' => $byStatus->sum(),
+            'by_status' => $byStatus,
+        ]);
     }
 
     public function store(StoreBookingRequest $request): JsonResponse
