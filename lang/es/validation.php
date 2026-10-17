@@ -218,6 +218,8 @@ return [
         'sort' => 'orden',
         'lat' => 'latitud',
         'lng' => 'longitud',
+        'rating' => 'calificación',
+        'comment' => 'comentario',
     ],
 
 ];
