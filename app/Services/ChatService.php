@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\BookingStatus;
+use App\Events\MessageDeleted;
 use App\Events\MessageSent;
 use App\Models\Booking;
 use App\Models\Message;
@@ -53,6 +54,17 @@ class ChatService
         $recipient->notify(new MessageReceived($message));
 
         return $message;
+    }
+
+    /**
+     * HU043: el mensaje desaparece del chat de las dos partes. Es un borrado lógico (soft delete):
+     * queda el registro, y su adjunto, por si hay un reporte (HU024).
+     */
+    public function delete(Message $message): void
+    {
+        $message->delete();
+
+        MessageDeleted::dispatch($message->id, $message->booking_id);
     }
 
     /**

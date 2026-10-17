@@ -82,7 +82,7 @@ Eventos (los que no tienen ✅ están planeados y se implementan en su módulo):
 |--------|-------|--------|
 | ✅ `availability.changed` (`App\Events\AvailabilityChanged`) | `professional.{id}.availability` | Agenda (HU003, HU025). Se emite al cambiar el horario o los bloqueos, al crear una reserva y cuando una reserva deja de ocupar agenda o vuelve a ocuparla. Datos: `{ "professional_id": 5 }` |
 | ✅ `message.sent` (`App\Events\MessageSent`) | `booking.{id}` | Chat (HU011). Datos: el mismo `MessageResource` de la API |
-| `message.deleted` | `booking.{id}` | Chat |
+| ✅ `message.deleted` (`App\Events\MessageDeleted`) | `booking.{id}` | Chat (HU043). Datos: `{ "id": 7, "booking_id": 42 }` |
 | ✅ `booking.status-changed` (`App\Events\BookingStatusChanged`) | `booking.{id}` | Ciclo de vida (HU026). Lo emite `BookingService::transition()` en cada cambio de estado. Datos: el mismo `BookingResource` de la API |
 | Notificaciones de Laravel | `App.Models.User.{id}` | Notificaciones |
 

@@ -6,12 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreMessageRequest;
 use App\Http\Resources\MessageResource;
 use App\Models\Booking;
+use App\Models\Message;
 use App\Services\ChatService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
- * HU011, HU042: chat de una reserva. Solo el cliente y el profesional de la reserva.
+ * HU011, HU042, HU043: chat de una reserva. Solo el cliente y el profesional de la reserva.
  */
 class MessageController extends Controller
 {
@@ -51,6 +52,15 @@ class MessageController extends Controller
         );
 
         return $this->created(new MessageResource($message), 'Mensaje enviado.');
+    }
+
+    public function destroy(Message $message): JsonResponse
+    {
+        $this->authorize('delete', $message);
+
+        $this->chat->delete($message);
+
+        return $this->ok(null, 'Mensaje eliminado.');
     }
 
     public function read(Request $request, Booking $booking): JsonResponse
