@@ -216,7 +216,7 @@ Un día sin horario devuelve `slots: []`. **404** si el profesional no es visibl
 
 ---
 
-### Perfil, servicios y portafolio del profesional (🛠 solo profesionales, HU009, HU047)
+### Perfil, servicios, portafolio e ingresos del profesional (🛠 solo profesionales, HU009, HU047, HU037)
 
 | Método | Ruta | HU |
 |--------|------|----|
@@ -226,6 +226,7 @@ Un día sin horario devuelve `slots: []`. **404** si el profesional no es visibl
 | PATCH, DELETE | `/professional/services/{id}` | HU009, HU047 |
 | GET, POST | `/professional/portfolio` | HU009 |
 | DELETE | `/professional/portfolio/{id}` | HU009 |
+| GET | `/professional/earnings?from=&to=` | HU037 |
 
 Lo público (descripción, especialidades, servicios activos y galería) se ve en `GET /professionals/{id}`.
 
@@ -285,6 +286,18 @@ Reemplaza las especialidades (categorías raíz, al menos una). **422** en `cate
 
 #### `GET /professional/portfolio` · `POST` · `DELETE /{id}`
 `POST` es `multipart/form-data` con `image` (JPG, PNG o WEBP, hasta 5 MB) y `description` opcional (hasta 255). Máximo **12 fotos** (**422** en `image`). Respuesta: `{ "id", "image_url", "description" }`. `DELETE` borra también el archivo; **403** si la foto es de otro profesional.
+
+#### `GET /professional/earnings?from=2026-10-01&to=2026-10-31`
+Ingresos por los servicios **finalizados** (`completed`) cuya `completed_at` cae en el rango (fechas `Y-m-d` en hora de Colombia, ambos días incluidos). Sin fechas: del primer día del mes en curso a hoy. Máximo un año por consulta (**422** en `to`). El ingreso de cada servicio es su `agreed_price`.
+```json
+{ "success": true, "message": null, "data": {
+  "from": "2026-10-01", "to": "2026-10-20",
+  "total": 250000, "count": 3, "average": 83333.33,
+  "by_day": [ { "date": "2026-10-02", "total": 200000, "count": 2 }, { "date": "2026-10-15", "total": 50000, "count": 1 } ],
+  "bookings": [ { "id": 42, "status": "completed", "agreed_price": 50000, "client": { "…": "…" }, "completed_at": "…", "…": "…" } ]
+} }
+```
+`by_day` solo trae los días con ingresos; `bookings` son las reservas del rango con la forma de `BookingResource`, de la más reciente a la más antigua.
 
 ---
 
@@ -653,9 +666,7 @@ Rutas y responsables acordados antes de implementar. Al implementar un endpoint 
 
 ### Módulo: Perfil profesional y servicios
 
-| Método | Ruta | Acceso | HU |
-|--------|------|--------|----|
-| GET | `/professional/earnings?from=&to=` | 🛠 | HU037 |
+Implementado: ver Parte 1 § Perfil, servicios, portafolio e ingresos del profesional.
 
 ### Módulo: Agenda y disponibilidad
 
