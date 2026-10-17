@@ -7,6 +7,8 @@ use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
+use Illuminate\Database\Events\ConnectionEstablished;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +21,26 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureApiDocs();
+        $this->registerSqliteGeoFunctions();
+    }
+
+    /**
+     * Registra funciones matemáticas en SQLite para pruebas de distancia y geolocalización (HU002).
+     */
+    private function registerSqliteGeoFunctions(): void
+    {
+        Event::listen(ConnectionEstablished::class, function (ConnectionEstablished $event) {
+            if ($event->connection->getDriverName() === 'sqlite') {
+                $pdo = $event->connection->getPdo();
+                $pdo->sqliteCreateFunction('least', fn (...$args) => min($args));
+                $pdo->sqliteCreateFunction('greatest', fn (...$args) => max($args));
+                $pdo->sqliteCreateFunction('radians', fn ($deg) => deg2rad((float) $deg));
+                $pdo->sqliteCreateFunction('degrees', fn ($rad) => rad2deg((float) $rad));
+                $pdo->sqliteCreateFunction('acos', fn ($val) => acos(min(1.0, max(-1.0, (float) $val))));
+                $pdo->sqliteCreateFunction('cos', fn ($val) => cos((float) $val));
+                $pdo->sqliteCreateFunction('sin', fn ($val) => sin((float) $val));
+            }
+        });
     }
 
     /**

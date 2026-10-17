@@ -24,8 +24,8 @@ abstract class Controller
         return ApiResponse::success($data, $message, 201);
     }
 
-    protected function paginated(ResourceCollection $collection, LengthAwarePaginator $paginator): JsonResponse
+    protected function paginated(ResourceCollection $collection, LengthAwarePaginator $paginator, array $extraMeta = []): JsonResponse
     {
-        return ApiResponse::paginated($collection, $paginator);
+        return ApiResponse::paginated($collection, $paginator, $extraMeta);
     }
 }

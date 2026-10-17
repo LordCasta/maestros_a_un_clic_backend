@@ -19,7 +19,9 @@ class SearchProfessionalsRequest extends FormRequest
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
             'min_price' => ['nullable', 'numeric', 'min:0'],
             'max_price' => ['nullable', 'numeric', 'min:0', 'gte:min_price'],
-            'sort' => ['nullable', 'in:rating,price_asc,price_desc'],
+            'sort' => ['nullable', 'in:rating,price_asc,price_desc,distance'],
+            'lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:lng', 'required_if:sort,distance'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:lat', 'required_if:sort,distance'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];
     }

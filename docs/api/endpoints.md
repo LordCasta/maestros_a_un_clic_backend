@@ -125,10 +125,11 @@ Solo aparecen profesionales **verificados y no bloqueados**. Nunca incluyen emai
 | Query | Descripción |
 |-------|-------------|
 | `q` | Busca por nombre |
-| `commune_id` | Filtra por comuna |
+| `commune_id` | Filtra por comuna. Si no hay profesionales en ella, sugiere de comunas aledañas (HU002) |
 | `category_id` | Categoría raíz (especialidad) o subcategoría (servicio activo) |
 | `min_price`, `max_price` | Rango de tarifa por hora |
-| `sort` | `rating` (por defecto), `price_asc`, `price_desc` |
+| `sort` | `rating` (por defecto sin coordenadas), `price_asc`, `price_desc`, `distance` (por defecto si se envían `lat` y `lng`) |
+| `lat`, `lng` | Coordenadas para búsqueda por proximidad (HU002, HU040). Filtra por el radio de servicio del profesional (`service_radius_km`) |
 | `page`, `per_page` | Paginación |
 
 **200** (paginado):
@@ -147,10 +148,12 @@ Solo aparecen profesionales **verificados y no bloqueados**. Nunca incluyen emai
       "description": "Plomero con más de diez años…",
       "experience_years": 10,
       "hourly_rate": 45000,
+      "distance_km": 1.4,
+      "is_suggested": false,
       "categories": [{ "id": 1, "name": "Plomería", "slug": "plomeria", "icon": "droplets", "parent_id": null }]
     }
   ],
-  "meta": { "current_page": 1, "last_page": 1, "per_page": 15, "total": 1 }
+  "meta": { "current_page": 1, "last_page": 1, "per_page": 15, "total": 1, "suggested_from_neighbors": false }
 }
 ```
 

@@ -216,6 +216,8 @@ return [
         'per_page' => 'resultados por página',
         'q' => 'búsqueda',
         'sort' => 'orden',
+        'lat' => 'latitud',
+        'lng' => 'longitud',
     ],
 
 ];
