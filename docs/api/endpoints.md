@@ -564,7 +564,25 @@ Solo el autor (**403** `Solo puedes eliminar tus propios mensajes.`). El mensaje
 
 ### Notificaciones
 
-Se guardan en la tabla `notifications` y llegan al instante por el canal privado `App.Models.User.{id}` ([../tiempo-real.md](../tiempo-real.md)). El listado y marcar como leídas (`GET /notifications`…) llegan con HU018.
+Se guardan en la tabla `notifications` y llegan al instante por el canal privado `App.Models.User.{id}` ([../tiempo-real.md](../tiempo-real.md)).
+
+| Método | Ruta | Acceso | HU |
+|--------|------|--------|----|
+| GET | `/notifications` | 🔑 | HU018 |
+| POST | `/notifications/{id}/read` | 🔑 la propia | HU018 |
+| POST | `/notifications/read-all` | 🔑 | HU018 |
+
+#### `GET /notifications`
+Paginado (20 por página), de la más reciente a la más antigua. `?unread=1` trae solo las no leídas, y su `meta.total` es el contador de la campana.
+```json
+{ "success": true, "message": null, "data": [
+  { "id": "9f1c…", "type": "booking.requested", "booking_id": 42, "title": "Nueva solicitud de reserva",
+    "body": "Camila Restrepo solicitó…", "read_at": null, "created_at": "2026-10-16T10:20:00-05:00" }
+], "meta": { "current_page": 1, "last_page": 1, "per_page": 20, "total": 1 } }
+```
+
+#### `POST /notifications/{id}/read` · `POST /notifications/read-all`
+Marca una o todas las propias como leídas. Una notificación de otro usuario responde **404**. `read-all` devuelve `data: { "marked": 3 }`.
 
 | `type` | A quién | Cuándo |
 |--------|---------|--------|
@@ -672,8 +690,4 @@ Amplía `GET /professionals` con `lat`, `lng` (distancia en km y orden por cerca
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| GET | `/notifications` | 🔑 | HU018 |
-| POST | `/notifications/{id}/read` | 🔑 | HU018 |
-| POST | `/notifications/read-all` | 🔑 | HU018 |
-
 Los mensajes y el estado en línea viajan por el canal de presencia `presence-booking.{id}`; las notificaciones, por `private-App.Models.User.{id}`. Ya configurados: ver [../tiempo-real.md](../tiempo-real.md).
