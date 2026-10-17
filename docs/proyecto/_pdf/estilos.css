@@ -1,0 +1,46 @@
+/* Estilos de impresión de la documentación (colores de la paleta del producto). */
+@page { size: A4; }
+* { box-sizing: border-box; }
+body {
+  font-family: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.55;
+  color: #0f172a;
+  margin: 0;
+}
+.portada {
+  height: 245mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  page-break-after: always;
+  border-left: 6px solid #2563eb;
+  padding-left: 14mm;
+}
+.portada .proyecto { color: #2563eb; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; }
+.portada-titulo { font-size: 30pt; line-height: 1.15; margin: 6mm 0 4mm; border: none; }
+.portada .subtitulo { color: #475569; font-size: 12pt; margin: 0 0 18mm; }
+.portada-datos { color: #334155; font-size: 10.5pt; }
+.portada-datos ul { margin: 0 0 6mm; padding-left: 5mm; }
+
+h1 { font-size: 20pt; color: #0f172a; border-bottom: 2px solid #dbeafe; padding-bottom: 2mm; margin: 0 0 5mm; }
+h2 { font-size: 14pt; color: #1e3a8a; margin: 8mm 0 3mm; page-break-after: avoid; }
+h3 { font-size: 11.5pt; color: #1e293b; margin: 6mm 0 2mm; page-break-after: avoid; }
+h4 { font-size: 10.5pt; margin: 4mm 0 1mm; }
+p, li { orphans: 3; widows: 3; }
+a { color: #1d4ed8; text-decoration: none; }
+code { font-family: Consolas, 'Courier New', monospace; font-size: 9pt; background: #f1f5f9; padding: 0.5mm 1mm; border-radius: 1mm; }
+pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 2mm; padding: 3mm; overflow: hidden; white-space: pre-wrap; font-size: 8.5pt; page-break-inside: avoid; }
+pre code { background: none; padding: 0; }
+pre.mermaid { background: none; border: none; text-align: center; white-space: normal; page-break-inside: avoid; }
+/* Un diagrama nunca pasa de una página: si es muy alto o ancho, se reduce. */
+pre.mermaid svg { max-width: 100% !important; max-height: 225mm; height: auto; }
+table { border-collapse: collapse; width: 100%; margin: 3mm 0 5mm; font-size: 9pt; page-break-inside: auto; }
+tr { page-break-inside: avoid; }
+th { background: #eff6ff; color: #1e3a8a; text-align: left; }
+th, td { border: 1px solid #e2e8f0; padding: 1.5mm 2mm; vertical-align: top; }
+blockquote { border-left: 3px solid #93c5fd; margin: 3mm 0; padding: 1mm 4mm; color: #334155; background: #f8fafc; }
+hr { border: none; border-top: 1px solid #e2e8f0; margin: 6mm 0; }
+img { max-width: 100%; }
+.seccion { page-break-before: always; }
+.seccion:first-child { page-break-before: auto; }

@@ -6,7 +6,11 @@ Laravel 12 · PHP 8.2+ · MySQL 8 · Sanctum · Reverb · Pest
 
 Frontend: [maestros_a_un_clic_frontend](https://github.com/LordCasta/maestros_a_un_clic_frontend)
 
-## Documentación
+## Documentación del proyecto
+
+Documento del proyecto, requisitos, diagramas, trazabilidad, pruebas, despliegue, seguridad y decisiones de arquitectura: **[docs/proyecto](docs/proyecto/README.md)**. Cada documento tiene su PDF, y también hay uno con todo: **[documentacion-completa.pdf](docs/proyecto/pdf/documentacion-completa.pdf)**.
+
+## Documentación técnica
 
 | Documento | Contenido |
 |-----------|-----------|
@@ -17,6 +21,7 @@ Frontend: [maestros_a_un_clic_frontend](https://github.com/LordCasta/maestros_a_
 | [docs/api/convenciones.md](docs/api/convenciones.md) | Formato de respuestas y errores, tipos, enums |
 | [docs/api/endpoints.md](docs/api/endpoints.md) | Endpoints implementados y planeados por módulo |
 | [docs/tiempo-real.md](docs/tiempo-real.md) | Reverb: canales, eventos y conexión desde el frontend |
+| [docs/api/openapi.json](docs/api/openapi.json) | Especificación OpenAPI 3.1 exportada (`php artisan scramble:export --path=docs/api/openapi.json`) |
 | `/docs/api` | Documentación interactiva generada desde el código (solo en local) |
 
 ## Instalación local
