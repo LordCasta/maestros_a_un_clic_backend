@@ -220,6 +220,11 @@ return [
         'lng' => 'longitud',
         'rating' => 'calificación',
         'comment' => 'comentario',
+        'documents' => 'documentos',
+        'documents.*.type' => 'tipo de documento',
+        'documents.*.file' => 'archivo',
+        'documents.*.title' => 'título del documento',
+        'file' => 'archivo',
     ],
 
 ];

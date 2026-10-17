@@ -645,6 +645,90 @@ Datos (los mismos en la base y en el WebSocket):
 
 ---
 
+### Verificación de cuenta y documentos KYC (🔑 usuario autenticado, HU008, HU013)
+
+| Método | Ruta | HU |
+|--------|------|----|
+| GET | `/verification` | HU008, HU013 |
+| POST | `/verification` | HU008, HU013 |
+| POST | `/verification/documents/{id}` | HU008 |
+
+#### `GET /verification`
+Consulta el estado actual de verificación del usuario autenticado (`unverified`, `pending`, `approved`, `rejected`) y su última solicitud con los documentos asociados.
+
+**200**
+```json
+{
+  "success": true,
+  "message": "Estado de verificación obtenido.",
+  "data": {
+    "verification_status": "pending",
+    "latest_request": {
+      "id": 1,
+      "status": "pending",
+      "rejection_reason": null,
+      "background_check_status": "not_checked",
+      "submitted_at": "2026-10-17T12:00:00-05:00",
+      "reviewed_at": null,
+      "documents": [
+        {
+          "id": 1,
+          "type": "id_document",
+          "title": "Cédula de ciudadanía",
+          "status": "pending",
+          "rejection_reason": null,
+          "file_url": "http://localhost:8000/storage/private/...",
+          "created_at": "2026-10-17T12:00:00-05:00",
+          "updated_at": "2026-10-17T12:00:00-05:00"
+        }
+      ],
+      "created_at": "2026-10-17T12:00:00-05:00",
+      "updated_at": "2026-10-17T12:00:00-05:00"
+    }
+  }
+}
+```
+
+#### `POST /verification`
+`multipart/form-data`: envío inicial de documentos para verificación KYC.
+
+| Campo | Regla |
+|-------|-------|
+| `documents` | obligatorio, arreglo de mín. 3 elementos |
+| `documents.*.type` | obligatorio: `id_document`, `selfie`, `certificate`, `work_evidence` |
+| `documents.*.file` | obligatorio: archivo JPG, PNG, WEBP o PDF, máx. 10 MB |
+| `documents.*.title` | opcional, texto de máx. 255 caracteres |
+
+Reglas de negocio (HU008 Criterio 3):
+- Debe incluir como mínimo un documento de identidad (`id_document`), una selfie (`selfie`) y al menos un certificado (`certificate`) o evidencia de trabajo (`work_evidence`).
+- Los archivos se almacenan en el disco privado (`local`).
+- Al enviarse, `verification_status` pasa a `pending` y el profesional no es visible en búsquedas públicas hasta su aprobación.
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **201** | `message: "Documentos enviados para verificación."`, `data`: solicitud creada con sus documentos |
+| **409** | La cuenta ya está aprobada (`Tu cuenta ya está verificada.`) o ya tiene una solicitud pendiente (`Ya tienes una solicitud de verificación en revisión.`) |
+| **422** | Faltan documentos requeridos, tipos inválidos o formato/tamaño excedido |
+
+#### `POST /verification/documents/{id}`
+`multipart/form-data`: reemplaza un documento rechazado y reenvía la solicitud a revisión (HU008 Criterio 6).
+
+| Campo | Regla |
+|-------|-------|
+| `file` | obligatorio: archivo JPG, PNG, WEBP o PDF, máx. 10 MB |
+| `title` | opcional, texto de máx. 255 caracteres |
+
+- Actualiza el documento a `pending`, limpia su `rejection_reason` y guarda el nuevo archivo privado.
+- Si la solicitud general estaba en `rejected`, pasa a `pending`, limpia `rejection_reason` y actualiza `user.verification_status` a `pending`.
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `message: "Documento reemplazado y solicitud reenviada a verificación."`, `data`: documento actualizado |
+| **403** | El documento no pertenece al usuario o no está en estado rechazado |
+| **422** | Archivo ausente, formato inválido o tamaño mayor a 10 MB |
+
+---
+
 ### Tiempo real
 
 | Método | Ruta | Acceso | Uso |
@@ -674,9 +758,6 @@ Rutas y responsables acordados antes de implementar. Al implementar un endpoint 
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| GET | `/verification` | 🔑 | HU008, HU013 |
-| POST | `/verification` | 🔑 | HU008, HU013 |
-| POST | `/verification/documents/{id}` | 🔑 | HU008 (reemplazar rechazado) |
 | GET | `/admin/verifications` | 🛡 | HU014 |
 | GET | `/admin/verifications/{id}` | 🛡 | HU014 |
 | POST | `/admin/verifications/{id}/approve` | 🛡 | HU014 |

@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\ProfessionalProfileController;
 use App\Http\Controllers\Api\ProfessionalServiceController;
 use App\Http\Controllers\Api\ProfessionalSlotController;
 use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\VerificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -105,4 +106,9 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::post('bookings/{booking}/messages', [MessageController::class, 'store']);
     Route::post('bookings/{booking}/messages/read', [MessageController::class, 'read']);
     Route::delete('messages/{message}', [MessageController::class, 'destroy']);
+
+    // Verificación de cuenta y documentos KYC (HU008, HU013)
+    Route::get('verification', [VerificationController::class, 'show']);
+    Route::post('verification', [VerificationController::class, 'store']);
+    Route::post('verification/documents/{document}', [VerificationController::class, 'replaceDocument'])->whereNumber('document');
 });
