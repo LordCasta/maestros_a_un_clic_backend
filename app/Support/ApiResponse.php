@@ -26,18 +26,18 @@ class ApiResponse
         ], $status);
     }
 
-    public static function paginated(ResourceCollection $collection, LengthAwarePaginator $paginator): JsonResponse
+    public static function paginated(ResourceCollection $collection, LengthAwarePaginator $paginator, array $extraMeta = []): JsonResponse
     {
         return response()->json([
             'success' => true,
             'message' => null,
             'data' => $collection,
-            'meta' => [
+            'meta' => array_merge([
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
                 'per_page' => $paginator->perPage(),
                 'total' => $paginator->total(),
-            ],
+            ], $extraMeta),
         ]);
     }
 

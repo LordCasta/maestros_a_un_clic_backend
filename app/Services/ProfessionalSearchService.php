@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Commune;
 use App\Models\ProfessionalProfile;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -9,20 +10,62 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Búsqueda pública de profesionales (HU010, HU033, HU039, HU046).
- * El módulo de búsqueda agrega distancia (HU040) y "disponible ahora" (HU030).
+ * Búsqueda por geolocalización, radio de acción y comunas aledañas (HU002, HU040).
  */
 class ProfessionalSearchService
 {
     /**
-     * @param  array{q?: string, commune_id?: int, category_id?: int, min_price?: float, max_price?: float, sort?: string}  $filters
+     * @param  array{q?: string, commune_id?: int, category_id?: int, min_price?: float, max_price?: float, sort?: string, lat?: float, lng?: float}  $filters
      */
     public function search(array $filters, int $perPage): LengthAwarePaginator
     {
+        $hasCoords = isset($filters['lat'], $filters['lng']);
+        $lat = $hasCoords ? (float) $filters['lat'] : null;
+        $lng = $hasCoords ? (float) $filters['lng'] : null;
+
+        $paginator = $this->buildQuery($filters, $lat, $lng)->paginate($perPage);
+
+        // Si se buscó por una comuna específica y no hay resultados, sugerir de comunas aledañas (HU002).
+        if ($paginator->total() === 0 && ! empty($filters['commune_id'])) {
+            $requestedCommune = Commune::find($filters['commune_id']);
+            $neighborIds = $requestedCommune?->neighbors()->pluck('communes.id')->all() ?? [];
+
+            if (! empty($neighborIds)) {
+                $suggestedFilters = $filters;
+                unset($suggestedFilters['commune_id']);
+                $suggestedFilters['neighbor_commune_ids'] = $neighborIds;
+
+                // Si no se pasaron coordenadas, usar el centroide de la comuna pedida para ordenar por proximidad
+                $suggestLat = $lat ?? ($requestedCommune ? (float) $requestedCommune->latitude : null);
+                $suggestLng = $lng ?? ($requestedCommune ? (float) $requestedCommune->longitude : null);
+
+                $suggestedPaginator = $this->buildQuery($suggestedFilters, $suggestLat, $suggestLng, isSuggestion: true)->paginate($perPage);
+
+                if ($suggestedPaginator->total() > 0) {
+                    $suggestedPaginator->getCollection()->transform(function ($professional) {
+                        $professional->is_suggested = true;
+
+                        return $professional;
+                    });
+                    $suggestedPaginator->suggestedFromNeighbors = true;
+
+                    return $suggestedPaginator;
+                }
+            }
+        }
+
+        return $paginator;
+    }
+
+    private function buildQuery(array $filters, ?float $lat, ?float $lng, bool $isSuggestion = false): Builder
+    {
+        $hasCoords = $lat !== null && $lng !== null;
+
         $query = User::publiclyListed()
             ->with(['commune', 'professionalProfile.categories'])
             ->when($filters['q'] ?? null, fn (Builder $q, string $term) => $q->where('name', 'like', "%{$term}%"))
-            ->when($filters['commune_id'] ?? null, fn (Builder $q, int $id) => $q->where('commune_id', $id))
-            // La categoría puede ser raíz (especialidad del perfil) o subcategoría (de un servicio activo).
+            ->when($filters['commune_id'] ?? null, fn (Builder $q, int $id) => $q->where('users.commune_id', $id))
+            ->when($filters['neighbor_commune_ids'] ?? null, fn (Builder $q, array $ids) => $q->whereIn('users.commune_id', $ids))
             ->when($filters['category_id'] ?? null, fn (Builder $q, int $id) => $q->whereHas(
                 'professionalProfile',
                 fn (Builder $profile) => $profile->where(fn (Builder $match) => $match
@@ -36,20 +79,40 @@ class ProfessionalSearchService
                 'professionalProfile', fn (Builder $p) => $p->where('hourly_rate', '<=', $max),
             ));
 
-        $this->applySort($query, $filters['sort'] ?? 'rating');
+        if ($hasCoords) {
+            $query->leftJoin('communes', 'users.commune_id', '=', 'communes.id')
+                ->leftJoin('professional_profiles', 'users.id', '=', 'professional_profiles.user_id')
+                ->select('users.*');
 
-        return $query->paginate($perPage);
+            $distanceSql = '6371 * acos(least(1.0, greatest(-1.0, cos(radians(?)) * cos(radians(COALESCE(users.latitude, communes.latitude))) * cos(radians(COALESCE(users.longitude, communes.longitude)) - radians(?)) + sin(radians(?)) * sin(radians(COALESCE(users.latitude, communes.latitude))))))';
+
+            $query->selectRaw("{$distanceSql} as distance_km", [$lat, $lng, $lat]);
+
+            // Filtrar profesionales dentro del radio de acción configurado (HU002).
+            if (! $isSuggestion && empty($filters['neighbor_commune_ids'])) {
+                $query->whereRaw("{$distanceSql} <= COALESCE(professional_profiles.service_radius_km, 10)", [$lat, $lng, $lat]);
+            }
+        }
+
+        $this->applySort($query, $filters['sort'] ?? ($hasCoords ? 'distance' : 'rating'), $hasCoords);
+
+        return $query;
     }
 
-    private function applySort(Builder $query, string $sort): void
+    private function applySort(Builder $query, string $sort, bool $hasCoords): void
     {
         match ($sort) {
+            'distance' => $hasCoords
+                ? $query->orderBy('distance_km', 'asc')
+                : $query->orderByDesc('rating_avg')->orderByDesc('rating_count'),
             'price_asc', 'price_desc' => $query
                 ->orderBy(
                     ProfessionalProfile::select('hourly_rate')->whereColumn('professional_profiles.user_id', 'users.id'),
                     $sort === 'price_asc' ? 'asc' : 'desc',
                 ),
-            default => $query->orderByDesc('rating_avg')->orderByDesc('rating_count'),
+            default => $hasCoords
+                ? $query->orderBy('distance_km', 'asc')
+                : $query->orderByDesc('rating_avg')->orderByDesc('rating_count'),
         };
     }
 }

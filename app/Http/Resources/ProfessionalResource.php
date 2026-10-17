@@ -33,6 +33,8 @@ class ProfessionalResource extends JsonResource
             'description' => $profile?->description,
             'experience_years' => $profile?->experience_years,
             'hourly_rate' => $profile?->hourly_rate !== null ? (float) $profile->hourly_rate : null,
+            'distance_km' => isset($this->distance_km) ? (float) round((float) $this->distance_km, 1) : null,
+            'is_suggested' => $this->when(isset($this->is_suggested), (bool) $this->is_suggested),
             'categories' => $this->when(
                 (bool) $profile?->relationLoaded('categories'),
                 fn () => CategoryResource::collection($profile->categories),
