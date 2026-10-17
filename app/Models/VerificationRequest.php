@@ -4,12 +4,17 @@ namespace App\Models;
 
 use App\Enums\BackgroundCheckStatus;
 use App\Enums\VerificationStatus;
+use Database\Factories\VerificationRequestFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VerificationRequest extends Model
 {
+    /** @use HasFactory<VerificationRequestFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'user_id',
         'status',

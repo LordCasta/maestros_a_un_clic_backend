@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\DocumentStatus;
 use App\Enums\DocumentType;
+use Database\Factories\VerificationDocumentFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,6 +14,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class VerificationDocument extends Model
 {
+    /** @use HasFactory<VerificationDocumentFactory> */
+    use HasFactory;
+
     protected $fillable = [
         'verification_request_id',
         'type',
