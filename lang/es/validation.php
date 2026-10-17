@@ -207,6 +207,8 @@ return [
         'estimated_duration_minutes' => 'duración estimada',
         'is_active' => 'activo',
         'image' => 'imagen',
+        'body' => 'mensaje',
+        'attachment' => 'imagen adjunta',
         'min_price' => 'precio mínimo',
         'max_price' => 'precio máximo',
         'per_page' => 'resultados por página',

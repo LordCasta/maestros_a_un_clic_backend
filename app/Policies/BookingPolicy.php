@@ -62,6 +62,14 @@ class BookingPolicy
     }
 
     /**
+     * HU011: el chat es solo entre el cliente y el profesional de la reserva.
+     */
+    public function chat(User $user, Booking $booking): bool
+    {
+        return $booking->involves($user);
+    }
+
+    /**
      * HU012: cliente o profesional pueden reprogramar.
      */
     public function reschedule(User $user, Booking $booking): bool

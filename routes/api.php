@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ProfessionalController;
 use App\Http\Controllers\Api\ProfessionalProfileController;
@@ -87,4 +88,9 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::post('bookings/{booking}/complete', [BookingController::class, 'complete']);
     Route::post('bookings/{booking}/reschedule', [BookingController::class, 'reschedule']);
     Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel']);
+
+    // Chat de la reserva (HU011, HU042)
+    Route::get('bookings/{booking}/messages', [MessageController::class, 'index']);
+    Route::post('bookings/{booking}/messages', [MessageController::class, 'store']);
+    Route::post('bookings/{booking}/messages/read', [MessageController::class, 'read']);
 });

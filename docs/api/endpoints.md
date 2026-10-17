@@ -515,6 +515,49 @@ Mueve la reserva a otra hora libre del profesional (HU012). Se puede desde `pend
 
 ---
 
+### Chat de la reserva (🔑 cliente y profesional de la reserva, HU011, HU041, HU042)
+
+| Método | Ruta | HU |
+|--------|------|----|
+| GET | `/bookings/{id}/messages` | HU011 |
+| POST | `/bookings/{id}/messages` | HU011, HU042 |
+| POST | `/bookings/{id}/messages/read` | HU011 |
+
+Solo participan el cliente y el profesional de la reserva (el admin tampoco lo lee): **403** a cualquier otro.
+
+#### `GET /bookings/{id}/messages`
+Los 200 mensajes más recientes, del más antiguo al más nuevo:
+```json
+{ "success": true, "message": null, "data": {
+  "can_send": true,
+  "messages": [
+    { "id": 1, "booking_id": 42, "sender": { "id": 3, "name": "Camila Restrepo", "avatar_url": null, "rating": { "…": "…" } },
+      "body": "¿Debo comprar algún repuesto?", "attachment_url": null, "read_at": null, "created_at": "2026-10-16T10:40:00-05:00" }
+  ]
+} }
+```
+`can_send` es `true` mientras la reserva está en `pending`, `accepted`, `confirmed` o `in_progress`. Cuando termina, se rechaza o se cancela, el historial se puede leer pero ya no escribir.
+
+#### `POST /bookings/{id}/messages`
+`multipart/form-data` (o JSON si no hay imagen):
+
+| Campo | Regla |
+|-------|-------|
+| `body` | Hasta 2000 caracteres. Obligatorio si no hay imagen (`Escribe un mensaje o adjunta una imagen.`) |
+| `attachment` | Imagen JPG, PNG o WEBP de hasta 5 MB (HU042). Se guarda en el **disco privado** |
+
+**201** con el mensaje. `attachment_url` es una URL **firmada que vence en 60 minutos**: se vuelve a generar cada vez que se pide el historial.
+
+- **409** si el chat está cerrado (`El chat se cierra cuando la reserva termina, se rechaza o se cancela.`).
+- Emite `message.sent` por el canal de presencia `booking.{id}` y avisa a la otra parte con la notificación `message.received`.
+
+#### `POST /bookings/{id}/messages/read`
+Marca como leídos los mensajes que la otra parte le envió al usuario. `data: { "marked": 3 }`.
+
+**En línea (HU041):** el canal de presencia `booking.{id}` informa quién está conectado (`here`, `joining`, `leaving`); no hace falta un endpoint.
+
+---
+
 ### Notificaciones
 
 Se guardan en la tabla `notifications` y llegan al instante por el canal privado `App.Models.User.{id}` ([../tiempo-real.md](../tiempo-real.md)). El listado y marcar como leídas (`GET /notifications`…) llegan con HU018.
@@ -529,6 +572,7 @@ Se guardan en la tabla `notifications` y llegan al instante por el canal privado
 | `booking.completed` | Cliente | El profesional finaliza el servicio (HU028); invita a calificar |
 | `booking.cancelled` | La otra parte (las dos si cancela el admin) | Se cancela la reserva (HU012), con el motivo |
 | `booking.rescheduled` | La otra parte | Se reprograma la reserva (HU012), con la fecha anterior y la nueva |
+| `message.received` | La otra parte | Mensaje nuevo en el chat (HU011). `body`: el texto (recortado) o "Te envió una imagen." |
 
 Datos (los mismos en la base y en el WebSocket):
 ```json
@@ -624,9 +668,7 @@ Amplía `GET /professionals` con `lat`, `lng` (distancia en km y orden por cerca
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| GET, POST | `/bookings/{id}/messages` | 🔑 participante | HU011, HU042 |
 | DELETE | `/messages/{id}` | 🔑 autor | HU043 |
-| POST | `/bookings/{id}/messages/read` | 🔑 participante | HU011 |
 | GET | `/notifications` | 🔑 | HU018 |
 | POST | `/notifications/{id}/read` | 🔑 | HU018 |
 | POST | `/notifications/read-all` | 🔑 | HU018 |
