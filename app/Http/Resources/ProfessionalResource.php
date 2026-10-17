@@ -43,11 +43,7 @@ class ProfessionalResource extends JsonResource
             ),
             'portfolio' => $this->when(
                 (bool) $profile?->relationLoaded('portfolioItems'),
-                fn () => $profile->portfolioItems->map(fn ($item) => [
-                    'id' => $item->id,
-                    'image_url' => Storage::disk('public')->url($item->image_path),
-                    'description' => $item->description,
-                ]),
+                fn () => PortfolioItemResource::collection($profile->portfolioItems),
             ),
         ];
     }

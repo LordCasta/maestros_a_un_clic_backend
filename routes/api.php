@@ -5,7 +5,10 @@ use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CatalogController;
 use App\Http\Controllers\Api\FavoriteController;
+use App\Http\Controllers\Api\PortfolioController;
 use App\Http\Controllers\Api\ProfessionalController;
+use App\Http\Controllers\Api\ProfessionalProfileController;
+use App\Http\Controllers\Api\ProfessionalServiceController;
 use App\Http\Controllers\Api\ProfessionalSlotController;
 use Illuminate\Support\Facades\Route;
 
@@ -45,6 +48,22 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
         Route::get('favorites', [FavoriteController::class, 'index']);
         Route::post('favorites/{professionalId}', [FavoriteController::class, 'store'])->whereNumber('professionalId');
         Route::delete('favorites/{professionalId}', [FavoriteController::class, 'destroy'])->whereNumber('professionalId');
+    });
+
+    // Perfil, servicios y portafolio del profesional (HU009, HU047)
+    Route::middleware('role:professional')->prefix('professional')->group(function () {
+        Route::get('profile', [ProfessionalProfileController::class, 'show']);
+        Route::patch('profile', [ProfessionalProfileController::class, 'update']);
+        Route::put('categories', [ProfessionalProfileController::class, 'categories']);
+
+        Route::get('services', [ProfessionalServiceController::class, 'index']);
+        Route::post('services', [ProfessionalServiceController::class, 'store']);
+        Route::patch('services/{service}', [ProfessionalServiceController::class, 'update']);
+        Route::delete('services/{service}', [ProfessionalServiceController::class, 'destroy']);
+
+        Route::get('portfolio', [PortfolioController::class, 'index']);
+        Route::post('portfolio', [PortfolioController::class, 'store']);
+        Route::delete('portfolio/{item}', [PortfolioController::class, 'destroy']);
     });
 
     // Agenda del profesional (HU003)

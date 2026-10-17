@@ -216,6 +216,78 @@ Un día sin horario devuelve `slots: []`. **404** si el profesional no es visibl
 
 ---
 
+### Perfil, servicios y portafolio del profesional (🛠 solo profesionales, HU009, HU047)
+
+| Método | Ruta | HU |
+|--------|------|----|
+| GET, PATCH | `/professional/profile` | HU009 |
+| PUT | `/professional/categories` | HU009 |
+| GET, POST | `/professional/services` | HU009, HU047 |
+| PATCH, DELETE | `/professional/services/{id}` | HU009, HU047 |
+| GET, POST | `/professional/portfolio` | HU009 |
+| DELETE | `/professional/portfolio/{id}` | HU009 |
+
+Lo público (descripción, especialidades, servicios activos y galería) se ve en `GET /professionals/{id}`.
+
+#### `GET /professional/profile` · `PATCH /professional/profile`
+El perfil propio para editarlo. A diferencia del público, incluye la dirección y las coordenadas.
+```json
+{ "success": true, "message": null, "data": {
+  "description": "Plomero con diez años…", "experience_years": 10, "hourly_rate": 45000, "service_radius_km": 10,
+  "commune": { "id": 11, "…": "…" }, "address": "Calle 10 # 43-20", "latitude": 6.2442, "longitude": -75.5812,
+  "categories": [{ "id": 1, "name": "Plomería", "…": "…" }],
+  "verification_status": "approved"
+} }
+```
+`PATCH` cambia **solo los campos enviados**; los demás se conservan y la verificación no se pierde.
+
+| Campo | Regla |
+|-------|-------|
+| `description` | Hasta 2000 caracteres |
+| `experience_years` | 0 a 70 |
+| `hourly_rate` | Número **mayor que 0** |
+| `service_radius_km` | 1 a 100 |
+| `commune_id`, `address` | Ubicación. Se guarda en `users` y la usa la búsqueda por zona y cercanía (HU002) |
+| `latitude`, `longitude` | Van juntas: si llega una, la otra es obligatoria |
+
+**200**: `message: "Perfil actualizado."` y `data` con la forma del `GET`.
+
+#### `PUT /professional/categories`
+```json
+{ "category_ids": [1, 4] }
+```
+Reemplaza las especialidades (categorías raíz, al menos una). **422** en `category_ids` si se quita una especialidad con servicios activos (`Tienes servicios activos en Plomería. Desactívalos antes de quitar la especialidad.`).
+
+#### `GET /professional/services` · `POST` · `PATCH /{id}` · `DELETE /{id}`
+`GET` lista todos los servicios propios, también los inactivos. Cada servicio tiene la forma de `services` del perfil público.
+
+```json
+{
+  "category_id": 2,
+  "title": "Reparación de fugas",
+  "description": "Incluye revisión de tuberías.",
+  "price_type": "fixed",
+  "price": 80000,
+  "estimated_duration_minutes": 90
+}
+```
+| Campo | Regla |
+|-------|-------|
+| `category_id` | Subcategoría de una de **sus** especialidades (si no: `Agrega primero esa especialidad a tu perfil.`) |
+| `price_type` | `fixed` o `hourly` |
+| `price` | Mayor que 0 |
+| `estimated_duration_minutes` | 15 a 720 (HU047). Define cuánto ocupa la reserva en la agenda y se muestra al cliente antes de reservar |
+| `is_active` | Solo en `PATCH`. `false` lo oculta del perfil y de las reservas nuevas |
+
+- `PATCH` cambia solo lo enviado. Las reservas existentes conservan su precio (`agreed_price`) y su horario.
+- `DELETE` responde **409** si el servicio tiene reservas (`Este servicio tiene reservas. Desactívalo para que no se pueda volver a reservar.`).
+- **403** si el servicio es de otro profesional.
+
+#### `GET /professional/portfolio` · `POST` · `DELETE /{id}`
+`POST` es `multipart/form-data` con `image` (JPG, PNG o WEBP, hasta 5 MB) y `description` opcional (hasta 255). Máximo **12 fotos** (**422** en `image`). Respuesta: `{ "id", "image_url", "description" }`. `DELETE` borra también el archivo; **403** si la foto es de otro profesional.
+
+---
+
 ### Agenda del profesional (🛠 solo profesionales, HU003)
 
 | Método | Ruta | HU |
@@ -517,12 +589,6 @@ Rutas y responsables acordados antes de implementar. Al implementar un endpoint 
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| PATCH | `/professional/profile` | 🛠 | HU009 |
-| PUT | `/professional/categories` | 🛠 | HU009 |
-| GET, POST | `/professional/services` | 🛠 | HU009, HU047 |
-| PATCH, DELETE | `/professional/services/{id}` | 🛠 | HU009 |
-| GET, POST | `/professional/portfolio` | 🛠 | HU009 |
-| DELETE | `/professional/portfolio/{id}` | 🛠 | HU009 |
 | GET | `/professional/earnings?from=&to=` | 🛠 | HU037 |
 
 ### Módulo: Agenda y disponibilidad
