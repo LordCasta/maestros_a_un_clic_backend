@@ -688,6 +688,4 @@ Amplía `GET /professionals` con `lat`, `lng` (distancia en km y orden por cerca
 
 ### Módulo: Chat y notificaciones
 
-| Método | Ruta | Acceso | HU |
-|--------|------|--------|----|
-Los mensajes y el estado en línea viajan por el canal de presencia `presence-booking.{id}`; las notificaciones, por `private-App.Models.User.{id}`. Ya configurados: ver [../tiempo-real.md](../tiempo-real.md).
+Implementado: ver Parte 1 § Chat de la reserva y § Notificaciones. Los mensajes y el estado en línea viajan por el canal de presencia `presence-booking.{id}`; las notificaciones, por `private-App.Models.User.{id}` ([../tiempo-real.md](../tiempo-real.md)).
