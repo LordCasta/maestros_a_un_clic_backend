@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\EarningsController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\MessageController;
 use App\Http\Controllers\Api\NotificationController;
@@ -52,7 +53,7 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
         Route::delete('favorites/{professionalId}', [FavoriteController::class, 'destroy'])->whereNumber('professionalId');
     });
 
-    // Perfil, servicios y portafolio del profesional (HU009, HU047)
+    // Perfil, servicios, portafolio e ingresos del profesional (HU009, HU047, HU037)
     Route::middleware('role:professional')->prefix('professional')->group(function () {
         Route::get('profile', [ProfessionalProfileController::class, 'show']);
         Route::patch('profile', [ProfessionalProfileController::class, 'update']);
@@ -66,6 +67,8 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
         Route::get('portfolio', [PortfolioController::class, 'index']);
         Route::post('portfolio', [PortfolioController::class, 'store']);
         Route::delete('portfolio/{item}', [PortfolioController::class, 'destroy']);
+
+        Route::get('earnings', EarningsController::class);
     });
 
     // Agenda del profesional (HU003)

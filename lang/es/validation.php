@@ -209,6 +209,8 @@ return [
         'image' => 'imagen',
         'body' => 'mensaje',
         'attachment' => 'imagen adjunta',
+        'from' => 'fecha inicial',
+        'to' => 'fecha final',
         'min_price' => 'precio mínimo',
         'max_price' => 'precio máximo',
         'per_page' => 'resultados por página',
