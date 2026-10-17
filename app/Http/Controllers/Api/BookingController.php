@@ -20,6 +20,8 @@ class BookingController extends Controller
 {
     private const RELATIONS = ['service.category', 'client', 'professional', 'commune'];
 
+    private const DETAIL_RELATIONS = ['service.category', 'client', 'professional', 'commune', 'reviews.reviewer', 'reviews.reviewee'];
+
     public function __construct(private readonly BookingService $bookings) {}
 
     /**
@@ -73,7 +75,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        return $this->ok(new BookingResource($booking->load(self::RELATIONS)));
+        return $this->ok(new BookingResource($booking->load(self::DETAIL_RELATIONS)));
     }
 
     /**

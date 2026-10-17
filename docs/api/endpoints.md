@@ -529,6 +529,26 @@ Mueve la reserva a otra hora libre del profesional (HU012). Se puede desde `pend
 
 **409** si ya llegó la hora (`La hora de la reserva ya llegó; ya no se puede cancelar.`) o si el estado actual no permite cancelar (p. ej. `completed`).
 
+#### `POST /bookings/{id}/review`
+```json
+{
+  "rating": 5,
+  "comment": "Excelente atención, muy recomendado."
+}
+```
+Calificación recíproca tras finalizar el servicio (HU005). Se puede realizar tanto por el cliente como por el profesional participante de la reserva.
+- `rating`: obligatorio, entero entre 1 y 5.
+- `comment`: opcional, texto de hasta 1000 caracteres.
+- Actualiza automáticamente `rating_avg` y `rating_count` en el usuario calificado (`reviewee`).
+- Envía notificación `review.received` a la contraparte.
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **201** | `message: "Calificación enviada correctamente."`, `data`: objeto de la reseña |
+| **403** | No es participante de la reserva (`Solo los participantes de la reserva pueden calificar.`) |
+| **409** | La reserva no está en estado `completed` (`Solo se pueden calificar reservas completadas.`) o el usuario ya calificó esta reserva (`Ya calificaste esta reserva.`) |
+| **422** | `rating` falta, no es entero o está fuera de 1..5; `comment` excede 1000 caracteres |
+
 ---
 
 ### Chat de la reserva (🔑 cliente y profesional de la reserva, HU011, HU041, HU042, HU043)
@@ -687,7 +707,6 @@ Todos usan `BookingService::transition()`.
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| POST | `/bookings/{id}/review` | 🔑 participante | HU005 |
 | GET | `/professionals/{id}/reviews` | 🌐 | HU029 |
 | GET | `/clients/{id}` | 🛠 | HU044 |
 | POST | `/reports` | 🔑 | HU024 |

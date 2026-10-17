@@ -27,6 +27,7 @@ class BookingResource extends JsonResource
             'agreed_price' => (float) $this->agreed_price,
             'started_at' => $this->started_at?->toIso8601String(),
             'completed_at' => $this->completed_at?->toIso8601String(),
+            'reviews' => ReviewResource::collection($this->whenLoaded('reviews')),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

@@ -84,4 +84,14 @@ class BookingPolicy
     {
         return $booking->involves($user) || $user->isAdmin();
     }
+
+    /**
+     * HU005: solo los participantes de la reserva pueden calificar.
+     */
+    public function review(User $user, Booking $booking): Response
+    {
+        return $booking->involves($user)
+            ? Response::allow()
+            : Response::deny('Solo los participantes de la reserva pueden calificar.');
+    }
 }

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ProfessionalController;
 use App\Http\Controllers\Api\ProfessionalProfileController;
 use App\Http\Controllers\Api\ProfessionalServiceController;
 use App\Http\Controllers\Api\ProfessionalSlotController;
+use App\Http\Controllers\Api\ReviewController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -92,6 +93,7 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::post('bookings/{booking}/complete', [BookingController::class, 'complete']);
     Route::post('bookings/{booking}/reschedule', [BookingController::class, 'reschedule']);
     Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel']);
+    Route::post('bookings/{booking}/review', [ReviewController::class, 'store']);
 
     // Notificaciones (HU018)
     Route::get('notifications', [NotificationController::class, 'index']);
