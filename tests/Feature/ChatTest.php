@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\BookingStatus;
+use App\Events\MessageDeleted;
 use App\Events\MessageSent;
 use App\Models\Booking;
 use App\Models\User;
@@ -86,6 +87,47 @@ describe('sending messages', function () {
 
         Sanctum::actingAs(User::factory()->admin()->create());
         $this->getJson("/api/v1/bookings/{$booking->id}/messages")->assertForbidden();
+    });
+});
+
+describe('deleting messages', function () {
+    it('removes the own message for both parties and keeps the conversation', function () {
+        Event::fake([MessageDeleted::class]);
+        Notification::fake();
+        $booking = Booking::factory()->create();
+        Sanctum::actingAs($booking->client);
+        $first = $this->postJson("/api/v1/bookings/{$booking->id}/messages", ['body' => 'Mensaje por error'])->json('data.id');
+        $this->postJson("/api/v1/bookings/{$booking->id}/messages", ['body' => 'Este sí'])->assertCreated();
+
+        $this->deleteJson("/api/v1/messages/{$first}")
+            ->assertOk()
+            ->assertJsonPath('message', 'Mensaje eliminado.');
+
+        Event::assertDispatched(MessageDeleted::class, fn (MessageDeleted $event) => $event->broadcastOn()->name === "presence-booking.{$booking->id}"
+            && $event->broadcastAs() === 'message.deleted'
+            && $event->broadcastWith() === ['id' => $first, 'booking_id' => $booking->id]);
+
+        Sanctum::actingAs($booking->professional);
+        $this->getJson("/api/v1/bookings/{$booking->id}/messages")
+            ->assertJsonCount(1, 'data.messages')
+            ->assertJsonPath('data.messages.0.body', 'Este sí');
+
+        // Borrado lógico: queda el registro por si hay un reporte.
+        $this->assertSoftDeleted('messages', ['id' => $first]);
+    });
+
+    it('only lets the author delete a message', function () {
+        Notification::fake();
+        $booking = Booking::factory()->create();
+        Sanctum::actingAs($booking->client);
+        $id = $this->postJson("/api/v1/bookings/{$booking->id}/messages", ['body' => 'Hola'])->json('data.id');
+
+        Sanctum::actingAs($booking->professional);
+        $this->deleteJson("/api/v1/messages/{$id}")
+            ->assertForbidden()
+            ->assertJsonPath('message', 'Solo puedes eliminar tus propios mensajes.');
+
+        $this->deleteJson('/api/v1/messages/999999')->assertNotFound();
     });
 });
 

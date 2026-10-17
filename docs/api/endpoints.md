@@ -515,13 +515,14 @@ Mueve la reserva a otra hora libre del profesional (HU012). Se puede desde `pend
 
 ---
 
-### Chat de la reserva (🔑 cliente y profesional de la reserva, HU011, HU041, HU042)
+### Chat de la reserva (🔑 cliente y profesional de la reserva, HU011, HU041, HU042, HU043)
 
 | Método | Ruta | HU |
 |--------|------|----|
 | GET | `/bookings/{id}/messages` | HU011 |
 | POST | `/bookings/{id}/messages` | HU011, HU042 |
 | POST | `/bookings/{id}/messages/read` | HU011 |
+| DELETE | `/messages/{id}` | HU043 |
 
 Solo participan el cliente y el profesional de la reserva (el admin tampoco lo lee): **403** a cualquier otro.
 
@@ -553,6 +554,9 @@ Los 200 mensajes más recientes, del más antiguo al más nuevo:
 
 #### `POST /bookings/{id}/messages/read`
 Marca como leídos los mensajes que la otra parte le envió al usuario. `data: { "marked": 3 }`.
+
+#### `DELETE /messages/{id}`
+Solo el autor (**403** `Solo puedes eliminar tus propios mensajes.`). El mensaje desaparece del historial de las dos partes y se emite `message.deleted` con `{ "id", "booking_id" }`. Es un **borrado lógico** (soft delete): el registro y su adjunto se conservan por si hay un reporte (HU024).
 
 **En línea (HU041):** el canal de presencia `booking.{id}` informa quién está conectado (`here`, `joining`, `leaving`); no hace falta un endpoint.
 
@@ -668,7 +672,6 @@ Amplía `GET /professionals` con `lat`, `lng` (distancia en km y orden por cerca
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| DELETE | `/messages/{id}` | 🔑 autor | HU043 |
 | GET | `/notifications` | 🔑 | HU018 |
 | POST | `/notifications/{id}/read` | 🔑 | HU018 |
 | POST | `/notifications/read-all` | 🔑 | HU018 |

@@ -89,8 +89,9 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::post('bookings/{booking}/reschedule', [BookingController::class, 'reschedule']);
     Route::post('bookings/{booking}/cancel', [BookingController::class, 'cancel']);
 
-    // Chat de la reserva (HU011, HU042)
+    // Chat de la reserva (HU011, HU042, HU043)
     Route::get('bookings/{booking}/messages', [MessageController::class, 'index']);
     Route::post('bookings/{booking}/messages', [MessageController::class, 'store']);
     Route::post('bookings/{booking}/messages/read', [MessageController::class, 'read']);
+    Route::delete('messages/{message}', [MessageController::class, 'destroy']);
 });
