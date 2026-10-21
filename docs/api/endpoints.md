@@ -840,7 +840,27 @@ Descarga o visualiza de forma segura el archivo privado del documento.
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
+| PATCH | `/me` | 🔑 | HU022, HU031 |
 | PUT | `/me/password` | 🔑 | HU019 |
+
+#### `PATCH /me`
+Actualiza datos de la cuenta y ubicación manual del usuario autenticado (cliente o profesional).
+
+| Campo | Regla |
+|-------|-------|
+| `name` | opcional, texto, máx. 255 caracteres |
+| `phone` | opcional, texto, máx. 20 caracteres |
+| `commune_id` | opcional, id existente en `/communes` |
+| `address` | opcional, texto, máx. 255 caracteres |
+| `latitude` | opcional, número entre -90 y 90 |
+| `longitude` | opcional, número entre -180 y 180 |
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `data: { user }`, `message: "Perfil y ubicación actualizados correctamente."` |
+| **401** | Sin autenticación |
+| **403** | Usuario bloqueado |
+| **422** | Comuna no existe o coordenadas fuera de rango |
 
 #### `PUT /me/password`
 Cambia la contraseña del usuario autenticado (cliente o profesional).
@@ -877,7 +897,6 @@ Rutas y responsables acordados antes de implementar. Al implementar un endpoint 
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| PATCH | `/me` | 🔑 | HU031, HU022 |
 | POST | `/me/avatar` | 🔑 | HU032 |
 | PUT | `/me/password` | 🔑 | HU019 |
 | DELETE | `/me` | 🔑 | HU023 |
