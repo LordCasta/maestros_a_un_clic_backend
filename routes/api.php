@@ -116,7 +116,8 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::post('verification', [VerificationController::class, 'store']);
     Route::post('verification/documents/{document}', [VerificationController::class, 'replaceDocument'])->whereNumber('document');
 
-    // Cuenta y perfil (HU019)
+    // Cuenta y perfil (HU019, HU022, HU031)
+    Route::patch('me', [AccountController::class, 'update']);
     Route::put('me/password', [AccountController::class, 'updatePassword']);
 
     // Verificación y administración (HU014, HU013)
