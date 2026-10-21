@@ -729,6 +729,27 @@ Reglas de negocio (HU008 Criterio 3):
 | **403** | El documento no pertenece al usuario o no está en estado rechazado |
 | **422** | Archivo ausente, formato inválido o tamaño mayor a 10 MB |
 
+### Cuenta y perfil
+
+| Método | Ruta | Acceso | HU |
+|--------|------|--------|----|
+| PUT | `/me/password` | 🔑 | HU019 |
+
+#### `PUT /me/password`
+Cambia la contraseña del usuario autenticado (cliente o profesional).
+
+| Campo | Regla |
+|-------|-------|
+| `current_password` | obligatorio, debe coincidir con la contraseña actual |
+| `password` | obligatorio, mín. 8 caracteres, validación estándar |
+| `password_confirmation` | obligatorio, debe coincidir con `password` |
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `message: "Contraseña actualizada correctamente."`, `data: null` |
+| **401** | Sin autenticación |
+| **422** | Contraseña actual incorrecta, campos faltantes o confirmación no coincide |
+
 ---
 
 ### Tiempo real
