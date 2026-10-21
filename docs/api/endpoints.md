@@ -17,8 +17,10 @@ Este documento da la visión por módulo y el contrato de lo que falta. El detal
 | POST | `/auth/login` | 🌐 | HU001 |
 | POST | `/auth/logout` | 🔑 | HU021 |
 | GET | `/auth/me` | 🔑 | — |
+| POST | `/auth/forgot-password` | 🌐 | HU020 |
+| POST | `/auth/reset-password` | 🌐 | HU020 |
 
-Registro, login: máximo 10 intentos por minuto.
+Registro, login, recuperación: máximo 10 intentos por minuto.
 
 #### `POST /auth/register/client`
 `multipart/form-data` (por la foto) o JSON si no hay foto.
@@ -82,6 +84,33 @@ Mismos campos que el cliente (sin `birth_date`; `commune_id` obligatorio), más:
 
 #### `POST /auth/logout` · `GET /auth/me`
 Logout revoca el token actual y devuelve `data: null`. `me` devuelve el mismo objeto `user` del login.
+
+#### `POST /auth/forgot-password`
+Envía al correo del usuario el enlace de recuperación con token de un solo uso (expira en 60 minutos).
+
+| Campo | Regla |
+|-------|-------|
+| `email` | obligatorio, formato de correo válido |
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `message: "Te enviamos por correo el enlace para restablecer tu contraseña."`, `data: null` |
+| **422** | Correo no registrado o formato inválido |
+
+#### `POST /auth/reset-password`
+Restablece la contraseña utilizando el token recibido por correo electrónico.
+
+| Campo | Regla |
+|-------|-------|
+| `token` | obligatorio, token válido no expirado |
+| `email` | obligatorio, correo del usuario |
+| `password` | obligatorio, mín. 8 caracteres |
+| `password_confirmation` | obligatorio, coincide con `password` |
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `message: "Tu contraseña fue restablecida."`, `data: null` |
+| **422** | Token inválido/expirado, contraseñas no coinciden o contraseña corta |
 
 ---
 

@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Dedoc\Scramble\Support\Generator\Types\BooleanType;
 use Dedoc\Scramble\Support\Generator\Types\ObjectType;
+use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Database\Events\ConnectionEstablished;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -22,6 +24,19 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureApiDocs();
         $this->registerSqliteGeoFunctions();
+        $this->configurePasswordResetUrl();
+    }
+
+    /**
+     * Configura la URL del frontend para el enlace de restablecimiento de contraseña (HU020).
+     */
+    private function configurePasswordResetUrl(): void
+    {
+        ResetPassword::createUrlUsing(function (User $user, string $token) {
+            $frontendUrl = rtrim((string) (config('app.frontend_url') ?? env('FRONTEND_URL', 'http://localhost:5173')), '/');
+
+            return "{$frontendUrl}/reset-password?token={$token}&email=".urlencode($user->email);
+        });
     }
 
     /**
