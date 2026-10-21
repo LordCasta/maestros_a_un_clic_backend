@@ -1,11 +1,13 @@
 <?php
 
 use App\Enums\CommuneType;
+use App\Models\AvailabilityRule;
 use App\Models\Category;
 use App\Models\Commune;
 use App\Models\PortfolioItem;
 use App\Models\ProfessionalService;
 use App\Models\User;
+use Illuminate\Support\Carbon;
 
 it('lists only verified and non blocked professionals', function () {
     $visible = User::factory()->professional()->verified()->create();
@@ -153,4 +155,101 @@ it('suggests professionals from neighboring communes when the requested commune 
         ->assertJsonPath('meta.suggested_from_neighbors', true);
 
     expect($response->json('data.0.distance_km'))->not->toBeNull();
+});
+
+it('filters by subcategory explicitly using subcategory_id', function () {
+    $plumbing = Category::factory()->create();
+    $leaks = Category::factory()->create(['parent_id' => $plumbing->id]);
+    $pipes = Category::factory()->create(['parent_id' => $plumbing->id]);
+
+    [$byLeaks] = professionalWithService(['category_id' => $leaks->id]);
+    [$byPipes] = professionalWithService(['category_id' => $pipes->id]);
+
+    $this->getJson("/api/v1/professionals?subcategory_id={$leaks->id}")
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $byLeaks->id);
+
+    $this->getJson("/api/v1/professionals?subcategory_id={$pipes->id}")
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $byPipes->id);
+});
+
+it('filters by hourly price range', function () {
+    $cheap = User::factory()->professional()->verified()->create();
+    $cheap->professionalProfile->update(['hourly_rate' => 25000]);
+
+    $medium = User::factory()->professional()->verified()->create();
+    $medium->professionalProfile->update(['hourly_rate' => 50000]);
+
+    $expensive = User::factory()->professional()->verified()->create();
+    $expensive->professionalProfile->update(['hourly_rate' => 85000]);
+
+    $this->getJson('/api/v1/professionals?min_price=30000&max_price=60000')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $medium->id);
+
+    $this->getJson('/api/v1/professionals?min_price=50000')
+        ->assertOk()
+        ->assertJsonCount(2, 'data');
+
+    $this->getJson('/api/v1/professionals?max_price=30000')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $cheap->id);
+});
+
+it('sorts by rating descending even when coordinates are provided', function () {
+    $clientLat = 6.2080000;
+    $clientLng = -75.5670000;
+
+    $closerLowerRated = User::factory()->professional()->verified()->create([
+        'latitude' => 6.2100000,
+        'longitude' => -75.5670000,
+        'rating_avg' => 3.5,
+        'rating_count' => 5,
+    ]);
+    $closerLowerRated->professionalProfile->update(['service_radius_km' => 10]);
+
+    $fartherHigherRated = User::factory()->professional()->verified()->create([
+        'latitude' => 6.2400000,
+        'longitude' => -75.5670000,
+        'rating_avg' => 4.9,
+        'rating_count' => 10,
+    ]);
+    $fartherHigherRated->professionalProfile->update(['service_radius_km' => 10]);
+
+    $byDistance = $this->getJson("/api/v1/professionals?lat={$clientLat}&lng={$clientLng}&sort=distance")
+        ->assertOk();
+    expect($byDistance->json('data.0.id'))->toBe($closerLowerRated->id);
+
+    $byRating = $this->getJson("/api/v1/professionals?lat={$clientLat}&lng={$clientLng}&sort=rating")
+        ->assertOk();
+    expect($byRating->json('data.0.id'))->toBe($fartherHigherRated->id);
+});
+
+it('includes next availability slot when professional has availability rules', function () {
+    $professional = User::factory()->professional()->verified()->create();
+    $tomorrow = Carbon::tomorrow();
+
+    AvailabilityRule::create([
+        'professional_profile_id' => $professional->professionalProfile->id,
+        'weekday' => $tomorrow->dayOfWeek,
+        'start_time' => '08:00',
+        'end_time' => '12:00',
+    ]);
+
+    $response = $this->getJson('/api/v1/professionals')
+        ->assertOk()
+        ->assertJsonCount(1, 'data');
+
+    expect($response->json('data.0.next_available_at'))->not->toBeNull()
+        ->and(Carbon::parse($response->json('data.0.next_available_at'))->isSameDay($tomorrow))->toBeTrue();
+
+    $detail = $this->getJson("/api/v1/professionals/{$professional->id}")
+        ->assertOk();
+
+    expect($detail->json('data.next_available_at'))->not->toBeNull();
 });

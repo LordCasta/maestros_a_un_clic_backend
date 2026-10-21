@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\User;
+use App\Services\AvailabilityService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -34,6 +35,7 @@ class ProfessionalResource extends JsonResource
             'experience_years' => $profile?->experience_years,
             'hourly_rate' => $profile?->hourly_rate !== null ? (float) $profile->hourly_rate : null,
             'distance_km' => isset($this->distance_km) ? (float) round((float) $this->distance_km, 1) : null,
+            'next_available_at' => $this->next_available_at ?? ($profile ? app(AvailabilityService::class)->nextAvailableSlot($profile) : null),
             'is_suggested' => $this->when(isset($this->is_suggested), (bool) $this->is_suggested),
             'categories' => $this->when(
                 (bool) $profile?->relationLoaded('categories'),
