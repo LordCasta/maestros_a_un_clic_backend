@@ -32,6 +32,9 @@ class User extends Authenticatable
         'latitude',
         'longitude',
         'verification_status',
+        'blocked_at',
+        'blocked_reason',
+        'blocked_by',
     ];
 
     protected $hidden = [

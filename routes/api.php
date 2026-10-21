@@ -1,11 +1,15 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AdminAlertController;
+use App\Http\Controllers\Api\AdminReportController;
+use App\Http\Controllers\Api\AdminUserController;
 use App\Http\Controllers\Api\AdminVerificationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CatalogController;
+use App\Http\Controllers\Api\ClientProfileController;
 use App\Http\Controllers\Api\EarningsController;
 use App\Http\Controllers\Api\FavoriteController;
 use App\Http\Controllers\Api\MessageController;
@@ -15,6 +19,7 @@ use App\Http\Controllers\Api\ProfessionalController;
 use App\Http\Controllers\Api\ProfessionalProfileController;
 use App\Http\Controllers\Api\ProfessionalServiceController;
 use App\Http\Controllers\Api\ProfessionalSlotController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\ReviewController;
 use App\Http\Controllers\Api\VerificationController;
 use Illuminate\Support\Facades\Route;
@@ -49,6 +54,7 @@ Route::get('categories', [CatalogController::class, 'categories']);
 Route::get('professionals', [ProfessionalController::class, 'index']);
 Route::get('professionals/{id}', [ProfessionalController::class, 'show'])->whereNumber('id');
 Route::get('professionals/{id}/slots', [ProfessionalSlotController::class, 'index'])->whereNumber('id');
+Route::get('professionals/{id}/reviews', [ReviewController::class, 'forProfessional'])->whereNumber('id');
 
 // Rutas autenticadas
 Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
@@ -116,11 +122,19 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::post('verification', [VerificationController::class, 'store']);
     Route::post('verification/documents/{document}', [VerificationController::class, 'replaceDocument'])->whereNumber('document');
 
-    // Cuenta y perfil (HU019, HU022, HU031)
-    Route::patch('me', [AccountController::class, 'update']);
-    Route::put('me/password', [AccountController::class, 'updatePassword']);
+    // Perfil del cliente (HU044)
+    Route::get('clients/{id}', [ClientProfileController::class, 'show'])->whereNumber('id');
 
-    // Verificación y administración (HU014, HU013)
+    // Reportes de usuario (HU024)
+    Route::post('reports', [ReportController::class, 'store']);
+
+    // Cuenta y perfil (HU019, HU022, HU023, HU031, HU032)
+    Route::patch('me', [AccountController::class, 'update']);
+    Route::post('me/avatar', [AccountController::class, 'uploadAvatar']);
+    Route::put('me/password', [AccountController::class, 'updatePassword']);
+    Route::delete('me', [AccountController::class, 'destroy']);
+
+    // Verificación y administración (HU014, HU013, HU024, HU038, HU045)
     Route::middleware('role:admin')->prefix('admin')->group(function () {
         Route::get('verifications', [AdminVerificationController::class, 'index']);
         Route::get('verifications/{verificationRequest}', [AdminVerificationController::class, 'show'])->whereNumber('verificationRequest');
@@ -128,5 +142,18 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
         Route::post('verifications/{verificationRequest}/reject', [AdminVerificationController::class, 'reject'])->whereNumber('verificationRequest');
         Route::patch('verification-documents/{document}', [AdminVerificationController::class, 'updateDocument'])->whereNumber('document');
         Route::get('verification-documents/{document}/file', [AdminVerificationController::class, 'file'])->whereNumber('document');
+
+        // Moderación de usuarios (HU038)
+        Route::get('users', [AdminUserController::class, 'index']);
+        Route::post('users/{user}/block', [AdminUserController::class, 'block'])->whereNumber('user');
+        Route::post('users/{user}/unblock', [AdminUserController::class, 'unblock'])->whereNumber('user');
+
+        // Reportes (HU024)
+        Route::get('reports', [AdminReportController::class, 'index']);
+        Route::post('reports/{report}/resolve', [AdminReportController::class, 'resolve'])->whereNumber('report');
+
+        // Alertas del sistema (HU045)
+        Route::get('alerts', [AdminAlertController::class, 'index']);
+        Route::post('alerts/{alert}/resolve', [AdminAlertController::class, 'resolve'])->whereNumber('alert');
     });
 });

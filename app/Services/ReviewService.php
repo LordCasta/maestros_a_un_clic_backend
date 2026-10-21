@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Enums\AlertType;
 use App\Enums\BookingStatus;
+use App\Models\AdminAlert;
 use App\Models\Booking;
 use App\Models\Review;
 use App\Models\User;
@@ -12,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 class ReviewService
 {
     /**
-     * HU005: calificación recíproca tras finalizar el servicio.
+     * HU005, HU045: calificación recíproca tras finalizar el servicio y alerta por baja calificación.
      *
      * @param  array{rating: int, comment?: ?string}  $data
      */
@@ -43,6 +45,21 @@ class ReviewService
 
             $reviewee = User::find($revieweeId);
             $reviewee?->notify(new ReviewReceived($review));
+
+            // HU045: alerta a administradores si la calificación es baja (<= 2) o promedio < 3.0
+            if ($data['rating'] <= 2 || ($reviewee && $reviewee->rating_count >= 3 && $reviewee->rating_avg < 3.0)) {
+                AdminAlert::create([
+                    'user_id' => $revieweeId,
+                    'type' => AlertType::LowRating,
+                    'data' => [
+                        'review_id' => $review->id,
+                        'rating' => $data['rating'],
+                        'comment' => $data['comment'] ?? null,
+                        'current_avg' => $reviewee?->rating_avg,
+                        'rating_count' => $reviewee?->rating_count,
+                    ],
+                ]);
+            }
 
             return $review->load(['reviewer', 'reviewee']);
         });

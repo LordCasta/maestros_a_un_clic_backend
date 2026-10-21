@@ -7,6 +7,7 @@ use App\Models\ProfessionalProfile;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 /**
  * Búsqueda pública de profesionales (HU010, HU033, HU039, HU046).
@@ -83,7 +84,29 @@ class ProfessionalSearchService
             ))
             ->when($filters['max_price'] ?? null, fn (Builder $q, float $max) => $q->whereHas(
                 'professionalProfile', fn (Builder $p) => $p->where('hourly_rate', '<=', $max),
-            ));
+            ))
+            ->when(! empty($filters['available_now']), function (Builder $q) {
+                $now = Carbon::now(config('app.timezone'));
+                $weekday = $now->dayOfWeek;
+                $currentTime = $now->format('H:i:s');
+
+                $q->whereHas('professionalProfile', function (Builder $profile) use ($weekday, $currentTime, $now) {
+                    $profile->whereHas('availabilityRules', function (Builder $rule) use ($weekday, $currentTime) {
+                        $rule->where('weekday', $weekday)
+                            ->where('start_time', '<=', $currentTime)
+                            ->where('end_time', '>=', $currentTime);
+                    })
+                        ->whereDoesntHave('availabilityBlocks', function (Builder $block) use ($now) {
+                            $block->where('starts_at', '<=', $now)
+                                ->where('ends_at', '>=', $now);
+                        });
+                })
+                    ->whereDoesntHave('bookingsAsProfessional', function (Builder $booking) use ($now) {
+                        $booking->occupyingSchedule()
+                            ->where('starts_at', '<=', $now)
+                            ->where('ends_at', '>=', $now);
+                    });
+            });
 
         if ($hasCoords) {
             $query->leftJoin('communes', 'users.commune_id', '=', 'communes.id')

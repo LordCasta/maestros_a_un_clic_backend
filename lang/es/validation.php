@@ -229,6 +229,10 @@ return [
         'current_password' => 'contraseña actual',
         'token' => 'token',
         'rejection_reason' => 'motivo de rechazo',
+        'reported_user_id' => 'usuario reportado',
+        'resolution_notes' => 'notas de resolución',
+        'available_now' => 'disponible ahora',
+        'block_user' => 'bloquear usuario',
     ],
 
 ];

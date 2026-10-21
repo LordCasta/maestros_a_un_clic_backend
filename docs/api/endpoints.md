@@ -841,7 +841,9 @@ Descarga o visualiza de forma segura el archivo privado del documento.
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
 | PATCH | `/me` | 🔑 | HU022, HU031 |
+| POST | `/me/avatar` | 🔑 | HU032 |
 | PUT | `/me/password` | 🔑 | HU019 |
+| DELETE | `/me` | 🔑 | HU023 |
 
 #### `PATCH /me`
 Actualiza datos de la cuenta y ubicación manual del usuario autenticado (cliente o profesional).
@@ -862,6 +864,18 @@ Actualiza datos de la cuenta y ubicación manual del usuario autenticado (client
 | **403** | Usuario bloqueado |
 | **422** | Comuna no existe o coordenadas fuera de rango |
 
+#### `POST /me/avatar`
+Sube o actualiza la foto de perfil del usuario autenticado (`multipart/form-data`).
+
+| Campo | Regla |
+|-------|-------|
+| `avatar` | obligatorio, imagen jpeg/jpg/png/webp, máx. 5 MB |
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `data: { user }`, `message: "Foto de perfil actualizada correctamente."` |
+| **422** | Archivo inválido o excede el tamaño máximo |
+
 #### `PUT /me/password`
 Cambia la contraseña del usuario autenticado (cliente o profesional).
 
@@ -876,6 +890,81 @@ Cambia la contraseña del usuario autenticado (cliente o profesional).
 | **200** | `message: "Contraseña actualizada correctamente."`, `data: null` |
 | **401** | Sin autenticación |
 | **422** | Contraseña actual incorrecta, campos faltantes o confirmación no coincide |
+
+#### `DELETE /me`
+Eliminación lógica de la cuenta del usuario autenticado tras verificar la contraseña actual. Requiere no tener reservas activas o pendientes.
+
+| Campo | Regla |
+|-------|-------|
+| `current_password` | obligatorio, debe coincidir con la contraseña actual |
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | `message: "Tu cuenta ha sido eliminada correctamente."`, `data: null` |
+| **422** | Contraseña incorrecta o reservas pendientes/en curso |
+
+---
+
+### Calificaciones y reportes
+
+| Método | Ruta | Acceso | HU |
+|--------|------|--------|----|
+| GET | `/professionals/{id}/reviews` | 🌐 | HU029 |
+| GET | `/clients/{id}` | 🔑 | HU044 |
+| POST | `/reports` | 🔑 | HU024 |
+
+#### `GET /professionals/{id}/reviews`
+Listado paginado de valoraciones y reseñas recibidas por un profesional.
+
+#### `GET /clients/{id}`
+Perfil del cliente con nombre, comuna, antigüedad y cantidad de reservas completadas.
+
+#### `POST /reports`
+Crea un reporte hacia otro usuario por fraude, incumplimiento o conducta inadecuada.
+
+| Campo | Regla |
+|-------|-------|
+| `reported_user_id` | obligatorio, id de usuario diferente al autenticado |
+| `booking_id` | opcional, id de reserva existente |
+| `reason` | obligatorio, texto 3–100 caracteres |
+| `description` | obligatorio, texto 10–2000 caracteres |
+
+---
+
+### Moderación y administración
+
+| Método | Ruta | Acceso | HU |
+|--------|------|--------|----|
+| GET | `/admin/users` | 🛡 | HU038 |
+| POST | `/admin/users/{id}/block` | 🛡 | HU038 |
+| POST | `/admin/users/{id}/unblock` | 🛡 | HU038 |
+| GET | `/admin/reports` | 🛡 | HU024 |
+| POST | `/admin/reports/{id}/resolve` | 🛡 | HU024 |
+| GET | `/admin/alerts` | 🛡 | HU045 |
+| POST | `/admin/alerts/{id}/resolve` | 🛡 | HU045 |
+
+#### `GET /admin/users`
+Listado paginado de usuarios para administración, con filtros por `role`, `status` (`active`/`blocked`) y búsqueda `q`.
+
+#### `POST /admin/users/{id}/block`
+Bloquea la cuenta de un usuario problemático e invalida sus sesiones/tokens.
+Payload: `{"reason": "Incumplimiento reiterado de términos y condiciones."}`
+
+#### `POST /admin/users/{id}/unblock`
+Desbloquea la cuenta de un usuario previamente suspendido.
+
+#### `GET /admin/reports`
+Bandeja de reportes de usuarios con estado, denunciante y denunciado. Filtro por `status` (`open`, `resolved`, `dismissed`).
+
+#### `POST /admin/reports/{id}/resolve`
+Resuelve o desestima un reporte, con notas obligatorias y opción de bloquear al usuario denunciado.
+Payload: `{"status": "resolved", "resolution_notes": "Se verificó la falta.", "block_user": true}`
+
+#### `GET /admin/alerts`
+Bandeja de alertas automáticas del sistema (ej. baja calificación o reportes). Filtro `status=pending` o `status=resolved`.
+
+#### `POST /admin/alerts/{id}/resolve`
+Marca una alerta del sistema como atendida y resuelta por el administrador autenticado.
 
 ---
 
