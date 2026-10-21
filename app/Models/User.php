@@ -119,7 +119,7 @@ class User extends Authenticatable
 
     public function scopeProfessionals(Builder $query): void
     {
-        $query->where('role', Role::Professional);
+        $query->where('users.role', Role::Professional);
     }
 
     /**
@@ -129,8 +129,8 @@ class User extends Authenticatable
     public function scopePubliclyListed(Builder $query): void
     {
         $query->professionals()
-            ->where('verification_status', VerificationStatus::Approved)
-            ->whereNull('blocked_at');
+            ->where('users.verification_status', VerificationStatus::Approved)
+            ->whereNull('users.blocked_at');
     }
 
     // Helpers

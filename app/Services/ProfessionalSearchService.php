@@ -64,7 +64,17 @@ class ProfessionalSearchService
 
         $query = User::publiclyListed()
             ->with(['commune', 'professionalProfile.categories', 'professionalProfile.availabilityRules'])
-            ->when($filters['q'] ?? null, fn (Builder $q, string $term) => $q->where('name', 'like', "%{$term}%"))
+            ->when($filters['q'] ?? null, fn (Builder $q, string $term) => $q->where(function (Builder $sub) use ($term) {
+                $sub->where('users.name', 'like', "%{$term}%")
+                    ->orWhereHas('professionalProfile', function (Builder $profile) use ($term) {
+                        $profile->where('description', 'like', "%{$term}%")
+                            ->orWhereHas('categories', fn (Builder $c) => $c->where('categories.name', 'like', "%{$term}%"))
+                            ->orWhereHas('services', fn (Builder $s) => $s->active()->where(function (Builder $service) use ($term) {
+                                $service->where('title', 'like', "%{$term}%")
+                                    ->orWhere('description', 'like', "%{$term}%");
+                            }));
+                    });
+            }))
             ->when($filters['commune_id'] ?? null, fn (Builder $q, int $id) => $q->where('users.commune_id', $id))
             ->when($filters['neighbor_commune_ids'] ?? null, fn (Builder $q, array $ids) => $q->whereIn('users.commune_id', $ids))
             ->when($filters['category_id'] ?? null, fn (Builder $q, int $id) => $q->whereHas(
@@ -131,10 +141,10 @@ class ProfessionalSearchService
     private function applySort(Builder $query, string $sort, bool $hasCoords): void
     {
         match ($sort) {
-            'rating' => $query->orderByDesc('rating_avg')->orderByDesc('rating_count'),
+            'rating' => $query->orderByDesc('users.rating_avg')->orderByDesc('users.rating_count'),
             'distance' => $hasCoords
                 ? $query->orderBy('distance_km', 'asc')
-                : $query->orderByDesc('rating_avg')->orderByDesc('rating_count'),
+                : $query->orderByDesc('users.rating_avg')->orderByDesc('users.rating_count'),
             'price_asc', 'price_desc' => $query
                 ->orderBy(
                     ProfessionalProfile::select('hourly_rate')->whereColumn('professional_profiles.user_id', 'users.id'),
@@ -142,7 +152,7 @@ class ProfessionalSearchService
                 ),
             default => $hasCoords
                 ? $query->orderBy('distance_km', 'asc')
-                : $query->orderByDesc('rating_avg')->orderByDesc('rating_count'),
+                : $query->orderByDesc('users.rating_avg')->orderByDesc('users.rating_count'),
         };
     }
 }

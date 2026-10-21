@@ -253,3 +253,29 @@ it('includes next availability slot when professional has availability rules', f
 
     expect($detail->json('data.next_available_at'))->not->toBeNull();
 });
+
+it('searches by q with geolocation coordinates without column ambiguity (HU002, HU039)', function () {
+    $clientLat = 6.2080000;
+    $clientLng = -75.5670000;
+
+    $electrician = User::factory()->professional()->verified()->create([
+        'name' => 'Carlos Electricista',
+        'latitude' => 6.2100000,
+        'longitude' => -75.5670000,
+    ]);
+    $electrician->professionalProfile->update(['service_radius_km' => 10]);
+
+    $plumber = User::factory()->professional()->verified()->create([
+        'name' => 'Mario Plomero',
+        'latitude' => 6.2120000,
+        'longitude' => -75.5670000,
+    ]);
+    $plumber->professionalProfile->update(['service_radius_km' => 10]);
+
+    $response = $this->getJson("/api/v1/professionals?q=Electricista&lat={$clientLat}&lng={$clientLng}&sort=distance")
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.id', $electrician->id);
+
+    expect($response->json('data.0.distance_km'))->not->toBeNull();
+});
