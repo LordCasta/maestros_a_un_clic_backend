@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AccountController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BookingController;
@@ -111,4 +112,7 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::get('verification', [VerificationController::class, 'show']);
     Route::post('verification', [VerificationController::class, 'store']);
     Route::post('verification/documents/{document}', [VerificationController::class, 'replaceDocument'])->whereNumber('document');
+
+    // Cuenta y perfil (HU019)
+    Route::put('me/password', [AccountController::class, 'updatePassword']);
 });
