@@ -8,6 +8,9 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 
 class AuthService
@@ -75,6 +78,48 @@ class AuthService
             'user' => $user,
             'token' => $user->createToken('api-token')->plainTextToken,
         ];
+    }
+
+    /**
+     * HU020: envía el enlace de restablecimiento de contraseña al correo indicado.
+     */
+    public function sendPasswordResetLink(string $email): string
+    {
+        $status = Password::sendResetLink(['email' => $email]);
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return __($status);
+        }
+
+        throw ValidationException::withMessages([
+            'email' => [__($status)],
+        ]);
+    }
+
+    /**
+     * HU020: restablece la contraseña del usuario utilizando el token de recuperación.
+     *
+     * @param  array{token: string, email: string, password: string, password_confirmation: string}  $credentials
+     */
+    public function resetPassword(array $credentials): string
+    {
+        $status = Password::reset(
+            $credentials,
+            function (User $user, string $password) {
+                $user->password = $password;
+                $user->setRememberToken(Str::random(60));
+                $user->save();
+                $user->tokens()->delete();
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return __($status);
+        }
+
+        throw ValidationException::withMessages([
+            'email' => [__($status)],
+        ]);
     }
 
     /**

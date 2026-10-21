@@ -32,6 +32,8 @@ Route::prefix('auth')->group(function () {
         Route::post('register/client', [AuthController::class, 'registerClient']);
         Route::post('register/professional', [AuthController::class, 'registerProfessional']);
         Route::post('login', [AuthController::class, 'login']);
+        Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('reset-password', [AuthController::class, 'resetPassword']);
     });
 
     Route::middleware('auth:sanctum')->group(function () {

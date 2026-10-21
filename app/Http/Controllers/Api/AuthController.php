@@ -3,9 +3,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ForgotPasswordRequest;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterClientRequest;
 use App\Http\Requests\RegisterProfessionalRequest;
+use App\Http\Requests\ResetPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use App\Services\AuthService;
@@ -40,6 +42,20 @@ class AuthController extends Controller
             'user' => new UserResource($session['user']->load('commune')),
             'token' => $session['token'],
         ], 'Sesión iniciada.');
+    }
+
+    public function forgotPassword(ForgotPasswordRequest $request): JsonResponse
+    {
+        $message = $this->auth->sendPasswordResetLink($request->validated('email'));
+
+        return $this->ok(null, $message);
+    }
+
+    public function resetPassword(ResetPasswordRequest $request): JsonResponse
+    {
+        $message = $this->auth->resetPassword($request->validated());
+
+        return $this->ok(null, $message);
     }
 
     public function logout(Request $request): JsonResponse

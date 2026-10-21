@@ -227,6 +227,7 @@ return [
         'documents.*.title' => 'título del documento',
         'file' => 'archivo',
         'current_password' => 'contraseña actual',
+        'token' => 'token',
     ],
 
 ];
