@@ -62,11 +62,17 @@ class ProfessionalSearchService
         $hasCoords = $lat !== null && $lng !== null;
 
         $query = User::publiclyListed()
-            ->with(['commune', 'professionalProfile.categories'])
+            ->with(['commune', 'professionalProfile.categories', 'professionalProfile.availabilityRules'])
             ->when($filters['q'] ?? null, fn (Builder $q, string $term) => $q->where('name', 'like', "%{$term}%"))
             ->when($filters['commune_id'] ?? null, fn (Builder $q, int $id) => $q->where('users.commune_id', $id))
             ->when($filters['neighbor_commune_ids'] ?? null, fn (Builder $q, array $ids) => $q->whereIn('users.commune_id', $ids))
             ->when($filters['category_id'] ?? null, fn (Builder $q, int $id) => $q->whereHas(
+                'professionalProfile',
+                fn (Builder $profile) => $profile->where(fn (Builder $match) => $match
+                    ->whereHas('categories', fn (Builder $c) => $c->whereKey($id))
+                    ->orWhereHas('services', fn (Builder $s) => $s->active()->where('category_id', $id))),
+            ))
+            ->when($filters['subcategory_id'] ?? null, fn (Builder $q, int $id) => $q->whereHas(
                 'professionalProfile',
                 fn (Builder $profile) => $profile->where(fn (Builder $match) => $match
                     ->whereHas('categories', fn (Builder $c) => $c->whereKey($id))
@@ -102,6 +108,7 @@ class ProfessionalSearchService
     private function applySort(Builder $query, string $sort, bool $hasCoords): void
     {
         match ($sort) {
+            'rating' => $query->orderByDesc('rating_avg')->orderByDesc('rating_count'),
             'distance' => $hasCoords
                 ? $query->orderBy('distance_km', 'asc')
                 : $query->orderByDesc('rating_avg')->orderByDesc('rating_count'),

@@ -53,6 +53,55 @@ class AvailabilityService
     }
 
     /**
+     * Primera fecha/hora disponible del profesional en los próximos días (HU010).
+     */
+    public function nextAvailableSlot(ProfessionalProfile $profile, int $daysAhead = 7): ?string
+    {
+        $rules = $profile->relationLoaded('availabilityRules')
+            ? $profile->availabilityRules
+            : $profile->availabilityRules()->get();
+
+        if ($rules->isEmpty()) {
+            return null;
+        }
+
+        $now = Carbon::now()->setTimezone(config('app.timezone'));
+        $duration = 60;
+
+        for ($i = 0; $i <= $daysAhead; $i++) {
+            $day = $now->copy()->addDays($i)->startOfDay();
+            $dayRules = $rules->where('weekday', $day->dayOfWeek)->sortBy('start_time');
+
+            if ($dayRules->isEmpty()) {
+                continue;
+            }
+
+            $windows = $dayRules->map(fn ($rule) => [
+                $day->copy()->setTimeFromTimeString($rule->start_time),
+                $day->copy()->setTimeFromTimeString($rule->end_time),
+            ])->all();
+
+            $busy = $this->busyIntervals($profile, $day, $day->copy()->endOfDay());
+
+            foreach ($windows as [$windowStart, $windowEnd]) {
+                $start = $windowStart->copy();
+
+                while ($start->copy()->addMinutes($duration)->lte($windowEnd)) {
+                    $end = $start->copy()->addMinutes($duration);
+
+                    if ($start->gt($now) && ! $this->overlapsAny($busy, $start, $end)) {
+                        return $start->toIso8601String();
+                    }
+
+                    $start->addMinutes(self::SLOT_STEP_MINUTES);
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * El profesional atiende en [$startsAt, $endsAt): cabe en una franja de su horario y no hay bloqueos.
      * Los cruces con otras reservas se revisan aparte (hasBookingConflict) porque responden 409.
      */

@@ -31,6 +31,7 @@ class ProfessionalController extends Controller
                 'professionalProfile.categories',
                 'professionalProfile.services' => fn ($q) => $q->active()->with('category'),
                 'professionalProfile.portfolioItems',
+                'professionalProfile.availabilityRules',
             ])
             ->findOrFail($id);
 

@@ -194,6 +194,7 @@ return [
         'category_ids' => 'especialidades',
         'category_ids.*' => 'especialidad',
         'category_id' => 'categoría',
+        'subcategory_id' => 'subcategoría',
         'professional_service_id' => 'servicio',
         'starts_at' => 'fecha y hora',
         'reason' => 'motivo',

@@ -127,6 +127,7 @@ Solo aparecen profesionales **verificados y no bloqueados**. Nunca incluyen emai
 | `q` | Busca por nombre |
 | `commune_id` | Filtra por comuna. Si no hay profesionales en ella, sugiere de comunas aledañas (HU002) |
 | `category_id` | Categoría raíz (especialidad) o subcategoría (servicio activo) |
+| `subcategory_id` | Subcategoría específica (servicio activo) (HU010) |
 | `min_price`, `max_price` | Rango de tarifa por hora |
 | `sort` | `rating` (por defecto sin coordenadas), `price_asc`, `price_desc`, `distance` (por defecto si se envían `lat` y `lng`) |
 | `lat`, `lng` | Coordenadas para búsqueda por proximidad (HU002, HU040). Filtra por el radio de servicio del profesional (`service_radius_km`) |
@@ -149,6 +150,7 @@ Solo aparecen profesionales **verificados y no bloqueados**. Nunca incluyen emai
       "experience_years": 10,
       "hourly_rate": 45000,
       "distance_km": 1.4,
+      "next_available_at": "2026-10-18T08:00:00-05:00",
       "is_suggested": false,
       "categories": [{ "id": 1, "name": "Plomería", "slug": "plomeria", "icon": "droplets", "parent_id": null }]
     }
