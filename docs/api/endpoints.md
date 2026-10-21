@@ -758,6 +758,84 @@ Reglas de negocio (HU008 Criterio 3):
 | **403** | El documento no pertenece al usuario o no está en estado rechazado |
 | **422** | Archivo ausente, formato inválido o tamaño mayor a 10 MB |
 
+### Administración de verificaciones KYC (🛡 solo administrador, HU014, HU013)
+
+| Método | Ruta | HU |
+|--------|------|----|
+| GET | `/admin/verifications` | HU014 |
+| GET | `/admin/verifications/{id}` | HU014 |
+| POST | `/admin/verifications/{id}/approve` | HU014 |
+| POST | `/admin/verifications/{id}/reject` | HU014 |
+| PATCH | `/admin/verification-documents/{id}` | HU014 |
+| GET | `/admin/verification-documents/{id}/file` | HU014 |
+
+#### `GET /admin/verifications`
+Bandeja paginada de solicitudes de verificación para el gestor/administrador con filtros.
+
+| Parámetro | Tipo | Descripción |
+|-----------|------|-------------|
+| `status` | string | Filtrar por estado: `pending`, `approved`, `rejected` |
+| `document_type` | string | Filtrar por tipo de documento (`id_document`, `selfie`, `certificate`, `work_evidence`) |
+| `role` | string | Filtrar por rol del usuario (`professional`, `client`) |
+| `search` | string | Búsqueda por nombre o correo del usuario |
+| `date_from` | date | Fecha de envío desde (YYYY-MM-DD) |
+| `date_to` | date | Fecha de envío hasta (YYYY-MM-DD) |
+| `per_page` | integer | Registros por página (default 15) |
+
+**200**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "status": "pending",
+      "rejection_reason": null,
+      "background_check_status": "not_checked",
+      "submitted_at": "2026-10-17T12:00:00-05:00",
+      "reviewed_at": null,
+      "user": {
+        "id": 2,
+        "name": "Carlos Maestro",
+        "email": "carlos@ejemplo.com",
+        "role": "professional"
+      },
+      "documents": [
+        {
+          "id": 1,
+          "type": "id_document",
+          "title": "Cédula",
+          "status": "pending",
+          "file_url": "..."
+        }
+      ]
+    }
+  ],
+  "meta": { "current_page": 1, "per_page": 15, "total": 1 }
+}
+```
+
+#### `GET /admin/verifications/{id}`
+Detalle completo de una solicitud con usuario, perfil, revisor y documentos cargados con URL temporal.
+
+#### `POST /admin/verifications/{id}/approve`
+Aprueba la verificación y marca el usuario como `approved`.
+- Valida que existan cédula (`id_document`) y selfie (`selfie`).
+- Rechaza (422) si algún documento está en estado `rejected`.
+- Envía notificación `VerificationStatusChanged` al usuario.
+
+#### `POST /admin/verifications/{id}/reject`
+Rechaza la solicitud con motivo obligatorio.
+- Payload: `{"reason": "El documento no coincide con la persona."}`
+- Actualiza el estado a `rejected` y notifica al usuario con el motivo.
+
+#### `PATCH /admin/verification-documents/{id}`
+Actualiza el estado de un documento individual a `approved` o `rejected`.
+- Payload: `{"status": "rejected", "rejection_reason": "Borroso"}` (obligatorio si es rejected).
+
+#### `GET /admin/verification-documents/{id}/file`
+Descarga o visualiza de forma segura el archivo privado del documento.
+
 ### Cuenta y perfil
 
 | Método | Ruta | Acceso | HU |
@@ -810,12 +888,6 @@ Rutas y responsables acordados antes de implementar. Al implementar un endpoint 
 
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
-| GET | `/admin/verifications` | 🛡 | HU014 |
-| GET | `/admin/verifications/{id}` | 🛡 | HU014 |
-| POST | `/admin/verifications/{id}/approve` | 🛡 | HU014 |
-| POST | `/admin/verifications/{id}/reject` | 🛡 | HU014 |
-| PATCH | `/admin/verification-documents/{id}` | 🛡 | HU014 |
-| GET | `/admin/verification-documents/{id}/file` | 🛡 | HU014 (URL firmada) |
 | GET | `/admin/users` | 🛡 | HU038 |
 | POST | `/admin/users/{id}/block` | 🛡 | HU038 |
 | POST | `/admin/users/{id}/unblock` | 🛡 | HU038 |

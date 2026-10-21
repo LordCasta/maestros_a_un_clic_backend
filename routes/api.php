@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AdminVerificationController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AvailabilityController;
 use App\Http\Controllers\Api\BookingController;
@@ -117,4 +118,14 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
 
     // Cuenta y perfil (HU019)
     Route::put('me/password', [AccountController::class, 'updatePassword']);
+
+    // Verificación y administración (HU014, HU013)
+    Route::middleware('role:admin')->prefix('admin')->group(function () {
+        Route::get('verifications', [AdminVerificationController::class, 'index']);
+        Route::get('verifications/{verificationRequest}', [AdminVerificationController::class, 'show'])->whereNumber('verificationRequest');
+        Route::post('verifications/{verificationRequest}/approve', [AdminVerificationController::class, 'approve'])->whereNumber('verificationRequest');
+        Route::post('verifications/{verificationRequest}/reject', [AdminVerificationController::class, 'reject'])->whereNumber('verificationRequest');
+        Route::patch('verification-documents/{document}', [AdminVerificationController::class, 'updateDocument'])->whereNumber('document');
+        Route::get('verification-documents/{document}/file', [AdminVerificationController::class, 'file'])->whereNumber('document');
+    });
 });
