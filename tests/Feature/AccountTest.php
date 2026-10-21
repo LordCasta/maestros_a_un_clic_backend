@@ -1,9 +1,13 @@
 <?php
 
+use App\Enums\BookingStatus;
 use App\Enums\CommuneType;
+use App\Models\Booking;
 use App\Models\Commune;
 use App\Models\User;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
 it('changes password successfully when current password is valid (HU019)', function () {
@@ -231,4 +235,99 @@ it('denies blocked user from updating location (HU022)', function () {
     ]);
 
     $response->assertForbidden();
+});
+
+it('uploads and updates user avatar (HU032)', function () {
+    Storage::fake('public');
+
+    $user = User::factory()->client()->create();
+    Sanctum::actingAs($user);
+
+    $file = UploadedFile::fake()->image('avatar.jpg', 200, 200);
+
+    $response = $this->postJson('/api/v1/me/avatar', [
+        'avatar' => $file,
+    ]);
+
+    $response->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonStructure(['data' => ['avatar_url']]);
+
+    $user->refresh();
+    expect($user->avatar_path)->not->toBeNull();
+    Storage::disk('public')->assertExists($user->avatar_path);
+});
+
+it('rejects invalid avatar file (HU032)', function () {
+    $user = User::factory()->client()->create();
+    Sanctum::actingAs($user);
+
+    $file = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
+
+    $response = $this->postJson('/api/v1/me/avatar', [
+        'avatar' => $file,
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['avatar']);
+});
+
+it('soft-deletes account when password matches and has no active bookings (HU023)', function () {
+    $user = User::factory()->client()->create([
+        'password' => 'Password123!',
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->deleteJson('/api/v1/me', [
+        'current_password' => 'Password123!',
+    ]);
+
+    $response->assertOk()
+        ->assertJson([
+            'success' => true,
+            'message' => 'Tu cuenta ha sido eliminada correctamente.',
+        ]);
+
+    expect(User::find($user->id))->toBeNull()
+        ->and(User::withTrashed()->find($user->id))->not->toBeNull();
+});
+
+it('rejects account deletion when current password is invalid (HU023)', function () {
+    $user = User::factory()->client()->create([
+        'password' => 'Password123!',
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->deleteJson('/api/v1/me', [
+        'current_password' => 'WrongPassword!',
+    ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors(['current_password']);
+
+    expect(User::find($user->id))->not->toBeNull();
+});
+
+it('prevents account deletion if user has pending or in-progress bookings (HU023)', function () {
+    $user = User::factory()->client()->create([
+        'password' => 'Password123!',
+    ]);
+    $pro = User::factory()->professional()->create();
+
+    Booking::factory()->create([
+        'client_id' => $user->id,
+        'professional_id' => $pro->id,
+        'status' => BookingStatus::Pending,
+    ]);
+
+    Sanctum::actingAs($user);
+
+    $response = $this->deleteJson('/api/v1/me', [
+        'current_password' => 'Password123!',
+    ]);
+
+    $response->assertStatus(422);
+    expect(User::find($user->id))->not->toBeNull();
 });

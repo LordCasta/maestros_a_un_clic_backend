@@ -6,12 +6,26 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreReviewRequest;
 use App\Http\Resources\ReviewResource;
 use App\Models\Booking;
+use App\Models\Review;
 use App\Services\ReviewService;
 use Illuminate\Http\JsonResponse;
 
 class ReviewController extends Controller
 {
     public function __construct(private readonly ReviewService $reviews) {}
+
+    /**
+     * HU029: listado público de calificaciones y reseñas recibidas por un profesional.
+     */
+    public function forProfessional(int $id): JsonResponse
+    {
+        $paginator = Review::where('reviewee_id', $id)
+            ->with(['reviewer.commune'])
+            ->latest()
+            ->paginate(15);
+
+        return $this->paginated(ReviewResource::collection($paginator), $paginator);
+    }
 
     /**
      * HU005: calificar la experiencia con la otra parte tras finalizar el servicio.

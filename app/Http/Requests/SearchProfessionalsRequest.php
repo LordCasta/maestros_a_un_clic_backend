@@ -24,6 +24,7 @@ class SearchProfessionalsRequest extends FormRequest
             'sort' => ['nullable', 'in:rating,price_asc,price_desc,distance'],
             'lat' => ['nullable', 'numeric', 'between:-90,90', 'required_with:lng', 'required_if:sort,distance'],
             'lng' => ['nullable', 'numeric', 'between:-180,180', 'required_with:lat', 'required_if:sort,distance'],
+            'available_now' => ['nullable', 'boolean'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];
     }
