@@ -228,6 +228,7 @@ return [
         'file' => 'archivo',
         'current_password' => 'contraseña actual',
         'token' => 'token',
+        'rejection_reason' => 'motivo de rechazo',
     ],
 
 ];
