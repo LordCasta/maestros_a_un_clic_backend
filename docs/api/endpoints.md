@@ -896,6 +896,14 @@ Cambia la contraseña del usuario autenticado (cliente o profesional).
 #### `DELETE /me`
 Eliminación lógica de la cuenta del usuario autenticado tras verificar la contraseña actual. Requiere no tener reservas activas o pendientes.
 
+La cuenta se **anonimiza** (decisión D12, Ley 1581):
+- Datos de la cuenta: el nombre pasa a `"Usuario eliminado"`, el correo a `eliminado-{id}@maestros.invalid`, y se borran teléfono, dirección, coordenadas y comuna.
+- Archivos: se borran la foto, el portafolio y los documentos de verificación.
+- Datos de uso: se borran los favoritos (los propios y los de otros clientes hacia él), las notificaciones y las sesiones.
+- Perfil profesional: su horario se borra y sus servicios quedan inactivos.
+
+Las reservas, reseñas y chats se conservan para la otra parte, que verá `"Usuario eliminado"`.
+
 | Campo | Regla |
 |-------|-------|
 | `current_password` | obligatorio, debe coincidir con la contraseña actual |

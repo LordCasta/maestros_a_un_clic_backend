@@ -4,9 +4,13 @@ use App\Enums\BookingStatus;
 use App\Enums\CommuneType;
 use App\Models\Booking;
 use App\Models\Commune;
+use App\Models\Favorite;
 use App\Models\User;
+use App\Models\VerificationDocument;
+use App\Models\VerificationRequest;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
@@ -291,6 +295,76 @@ it('soft-deletes account when password matches and has no active bookings (HU023
 
     expect(User::find($user->id))->toBeNull()
         ->and(User::withTrashed()->find($user->id))->not->toBeNull();
+});
+
+it('anonymizes the deleted account and removes its files and sessions (HU023, D12)', function () {
+    Storage::fake('public');
+    Storage::fake('local');
+    Notification::fake();
+
+    $pro = User::factory()->professional()->verified()->create([
+        'name' => 'Juan Castaño',
+        'email' => 'juan@example.com',
+        'phone' => '3001234567',
+        'address' => 'Calle 10 # 20-30',
+        'latitude' => 6.25,
+        'longitude' => -75.56,
+        'password' => 'Password123!',
+        'avatar_path' => UploadedFile::fake()->image('yo.jpg')->store('avatars', 'public'),
+    ]);
+    $profile = $pro->professionalProfile;
+    $portfolioPath = UploadedFile::fake()->image('obra.jpg')->store('portfolio', 'public');
+    $profile->portfolioItems()->create(['image_path' => $portfolioPath]);
+    $documentPath = UploadedFile::fake()->create('cedula.pdf', 100)->store('verification-documents', 'local');
+    VerificationDocument::factory()
+        ->for(VerificationRequest::factory()->for($pro))
+        ->create(['file_path' => $documentPath]);
+    $fan = User::factory()->client()->create();
+    Favorite::create(['client_id' => $fan->id, 'professional_id' => $pro->id]);
+    $pro->createToken('api-token');
+    $avatarPath = $pro->avatar_path;
+
+    Sanctum::actingAs($pro);
+    $this->deleteJson('/api/v1/me', ['current_password' => 'Password123!'])->assertOk();
+
+    $deleted = User::withTrashed()->find($pro->id);
+    expect($deleted->name)->toBe('Usuario eliminado')
+        ->and($deleted->email)->toBe("eliminado-{$pro->id}@maestros.invalid")
+        ->and($deleted->phone)->toBeNull()
+        ->and($deleted->address)->toBeNull()
+        ->and($deleted->latitude)->toBeNull()
+        ->and($deleted->avatar_path)->toBeNull()
+        ->and($deleted->tokens()->count())->toBe(0)
+        ->and($deleted->verificationRequests()->count())->toBe(0)
+        ->and($profile->portfolioItems()->count())->toBe(0)
+        ->and($profile->fresh()->description)->toBeNull()
+        ->and($profile->services()->where('is_active', true)->count())->toBe(0)
+        ->and(Favorite::where('professional_id', $pro->id)->exists())->toBeFalse();
+
+    Storage::disk('public')->assertMissing([$avatarPath, $portfolioPath]);
+    Storage::disk('local')->assertMissing($documentPath);
+
+    // Ya no puede entrar con su correo de antes.
+    $this->postJson('/api/v1/auth/login', ['email' => 'juan@example.com', 'password' => 'Password123!'])
+        ->assertUnauthorized();
+});
+
+it('keeps the bookings and reviews of the other party after deleting the account (HU023, D12)', function () {
+    $client = User::factory()->client()->create(['password' => 'Password123!']);
+    $booking = Booking::factory()->create([
+        'client_id' => $client->id,
+        'status' => BookingStatus::Completed,
+    ]);
+    $pro = $booking->professional;
+
+    Sanctum::actingAs($client);
+    $this->deleteJson('/api/v1/me', ['current_password' => 'Password123!'])->assertOk();
+
+    Sanctum::actingAs($pro);
+    $this->getJson("/api/v1/bookings/{$booking->id}")
+        ->assertOk()
+        ->assertJsonPath('data.client.id', $client->id)
+        ->assertJsonPath('data.client.name', 'Usuario eliminado');
 });
 
 it('rejects account deletion when current password is invalid (HU023)', function () {

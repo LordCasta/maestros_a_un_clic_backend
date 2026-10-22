@@ -45,12 +45,12 @@ class Booking extends Model
 
     public function client(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'client_id');
+        return $this->belongsTo(User::class, 'client_id')->withTrashed();
     }
 
     public function professional(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'professional_id');
+        return $this->belongsTo(User::class, 'professional_id')->withTrashed();
     }
 
     public function service(): BelongsTo

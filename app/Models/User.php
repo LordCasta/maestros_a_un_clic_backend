@@ -112,7 +112,7 @@ class User extends Authenticatable
 
     public function blockedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'blocked_by');
+        return $this->belongsTo(User::class, 'blocked_by')->withTrashed();
     }
 
     // Scopes
