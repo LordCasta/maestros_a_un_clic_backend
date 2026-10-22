@@ -6,6 +6,8 @@ Laravel 12 · PHP 8.2+ · MySQL 8 · Sanctum · Reverb · Pest
 
 Frontend: [maestros_a_un_clic_frontend](https://github.com/LordCasta/maestros_a_un_clic_frontend)
 
+**Estado:** las 49 historias de usuario están terminadas, con 220 pruebas de API. El detalle de cada una (endpoints, pantallas y pruebas) está en la [matriz de trazabilidad](docs/proyecto/04-trazabilidad.md).
+
 ## Documentación del proyecto
 
 Documento del proyecto, requisitos, diagramas, trazabilidad, pruebas, despliegue, seguridad y decisiones de arquitectura: **[docs/proyecto](docs/proyecto/README.md)**. Cada documento tiene su PDF, y también hay uno con todo: **[documentacion-completa.pdf](docs/proyecto/pdf/documentacion-completa.pdf)**.
@@ -19,7 +21,7 @@ Documento del proyecto, requisitos, diagramas, trazabilidad, pruebas, despliegue
 | [docs/arquitectura.md](docs/arquitectura.md) | Capas, reglas y checklist para agregar un módulo. **Leer antes de programar.** |
 | [docs/modelo-de-datos.md](docs/modelo-de-datos.md) | Diagrama ER, máquina de estados de la reserva, decisiones y trazabilidad con las HU |
 | [docs/api/convenciones.md](docs/api/convenciones.md) | Formato de respuestas y errores, tipos, enums |
-| [docs/api/endpoints.md](docs/api/endpoints.md) | Endpoints implementados y planeados por módulo |
+| [docs/api/endpoints.md](docs/api/endpoints.md) | Todos los endpoints por módulo, con reglas de validación y respuestas |
 | [docs/tiempo-real.md](docs/tiempo-real.md) | Reverb: canales, eventos y conexión desde el frontend |
 | [docs/api/openapi.json](docs/api/openapi.json) | Especificación OpenAPI 3.1 exportada (`php artisan scramble:export --path=docs/api/openapi.json`) |
 | `/docs/api` | Documentación interactiva generada desde el código (solo en local) |
@@ -37,7 +39,7 @@ Requisitos: PHP 8.2+ con `pdo_mysql` y `pdo_sqlite`, Composer, MySQL 8 y Node.js
    php artisan key:generate
    ```
 
-3. Ajusta `DB_USERNAME` / `DB_PASSWORD` en `.env`.
+3. Ajusta `DB_USERNAME` / `DB_PASSWORD` en `.env`. Deja `APP_URL=http://127.0.0.1:8000` (la dirección del API, no la de Reverb: con ella se arman las URLs de las fotos) y `FRONTEND_URL=http://localhost:5173` (a donde apunta el enlace del correo de recuperación de contraseña).
 4. Crea el esquema con datos demo:
 
    ```bash
@@ -60,13 +62,15 @@ Requisitos: PHP 8.2+ con `pdo_mysql` y `pdo_sqlite`, Composer, MySQL 8 y Node.js
    | Reverb (WebSockets) | `ws://localhost:8080` |
    | Cola | procesa eventos en segundo plano |
 
+   En local los correos no se envían: con `MAIL_MAILER=log` quedan en `storage/logs/laravel.log`. Ahí aparece, por ejemplo, el enlace para restablecer la contraseña.
+
 ### Cuentas demo
 
 Todas con contraseña `password`:
 
 | Correo | Rol | Para probar |
 |--------|-----|-------------|
-| `admin@maestros.test` | Administrador | Panel de admin |
+| `admin@maestros.test` | Administrador | Verificaciones, usuarios (bloquear y desbloquear), reportes y alertas |
 | `cliente@maestros.test` | Cliente verificado | Reservas en varios estados, favoritos |
 | `pendiente@maestros.test` | Cliente sin verificar | Bloqueo de reservas por verificación |
 | `profesional@maestros.test` | Profesional verificado | Servicios, agenda, reservas recibidas |
