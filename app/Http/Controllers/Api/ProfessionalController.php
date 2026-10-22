@@ -13,14 +13,10 @@ class ProfessionalController extends Controller
 {
     public function index(SearchProfessionalsRequest $request, ProfessionalSearchService $search): JsonResponse
     {
-        $paginator = $search->search($request->validated(), (int) $request->input('per_page', 15));
+        $result = $search->search($request->validated(), (int) $request->input('per_page', 15));
+        $extraMeta = $result->suggestedFromNeighbors ? ['suggested_from_neighbors' => true] : [];
 
-        $extraMeta = [];
-        if (! empty($paginator->suggestedFromNeighbors)) {
-            $extraMeta['suggested_from_neighbors'] = true;
-        }
-
-        return $this->paginated(ProfessionalResource::collection($paginator), $paginator, $extraMeta);
+        return $this->paginated(ProfessionalResource::collection($result->paginator), $result->paginator, $extraMeta);
     }
 
     public function show(int $id): JsonResponse
