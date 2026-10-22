@@ -36,7 +36,7 @@ app/
 ├── Models/                 Eloquent: relaciones, casts, scopes. Sin lógica de negocio.
 ├── Policies/               Permisos sobre un recurso concreto.
 ├── Services/               Reglas de negocio, transacciones, archivos.
-└── Support/                ApiResponse (formato único de respuesta) y objetos de resultado de los servicios.
+└── Support/ApiResponse.php Formato único de respuesta.
 database/
 ├── migrations/             Esquema completo (ver modelo-de-datos.md).
 ├── factories/              Datos de prueba para tests.
@@ -129,6 +129,6 @@ vendor/bin/pint --dirty       # formatear lo que cambiaste
 6. Service si aplica la regla de la sección 3.
 7. Resource para la respuesta.
 8. Tests en `tests/Feature/<Recurso>Test.php`.
-9. Documentar el endpoint en [api/endpoints.md](api/endpoints.md), en la sección de su módulo. Revisar que `/docs/api` lo muestre bien; si Scramble no infiere algo, agregar PHPDoc al método del controller.
+9. Documentar el endpoint en [api/endpoints.md](api/endpoints.md) (moverlo de "Planeados" a "Implementados"). Revisar que `/docs/api` lo muestre bien; si Scramble no infiere algo, agregar PHPDoc al método del controller.
 10. Si emite eventos en tiempo real, seguir la convención de [tiempo-real.md](tiempo-real.md).
 11. `vendor/bin/pint --dirty` y `php artisan test` en verde.

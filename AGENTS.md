@@ -11,7 +11,7 @@ Antes de escribir código, lee `docs/arquitectura.md`. Para crear un endpoint o 
 - Estados, roles y tipos siempre con los enums de `app/Enums`. Todo cambio de estado de una reserva pasa por `BookingService::transition()`.
 - Archivos solo mediante `App\Services\UploadService`. Documentos KYC y adjuntos del chat van al disco privado.
 - El esquema está definido en `docs/modelo-de-datos.md`. Las migraciones existentes no se editan: todo cambio va en una migración nueva y se refleja en ese documento.
-- Cada endpoint nuevo lleva tests (feliz, validación, permisos) y se documenta en `docs/api/endpoints.md`, en la sección de su módulo. Si cambia un Resource, avisa que hay que actualizar `src/shared/types/models.ts` del frontend.
+- Cada endpoint nuevo lleva tests (feliz, validación, permisos) y se documenta en `docs/api/endpoints.md` (de "Planeados" a "Implementados"). Si cambia un Resource, avisa que hay que actualizar `src/shared/types/models.ts` del frontend.
 - Mensajes para el usuario en español. Los nombres de campos nuevos se agregan a `lang/es/validation.php` → `attributes`.
 - Antes de terminar: `php artisan test` y `vendor/bin/pint --dirty` en verde.
 
