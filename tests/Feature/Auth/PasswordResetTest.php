@@ -20,7 +20,7 @@ it('sends password reset link to registered user (HU020)', function () {
     $response->assertOk()
         ->assertJson([
             'success' => true,
-            'message' => 'Te enviamos por correo el enlace para restablecer tu contraseña.',
+            'message' => 'Si el correo está registrado, te enviamos el enlace para restablecer tu contraseña.',
             'data' => null,
         ]);
 
@@ -35,17 +35,42 @@ it('sends password reset link to registered user (HU020)', function () {
     expect(DB::table('password_reset_tokens')->where('email', 'cliente@example.com')->exists())->toBeTrue();
 });
 
-it('rejects password reset link request for unregistered email (HU020)', function () {
+it('answers the same for an unregistered email so accounts cannot be discovered (HU020)', function () {
     Notification::fake();
+    User::factory()->client()->create(['email' => 'cliente@example.com']);
 
-    $response = $this->postJson('/api/v1/auth/forgot-password', [
-        'email' => 'noexiste@example.com',
-    ]);
+    $registered = $this->postJson('/api/v1/auth/forgot-password', ['email' => 'cliente@example.com']);
+    $unknown = $this->postJson('/api/v1/auth/forgot-password', ['email' => 'noexiste@example.com']);
 
-    $response->assertUnprocessable()
-        ->assertJsonValidationErrors(['email']);
+    $unknown->assertOk();
+    expect($unknown->json())->toBe($registered->json());
+    Notification::assertCount(1);
+});
 
-    Notification::assertNothingSent();
+it('answers the same when the link was requested a moment ago (HU020)', function () {
+    Notification::fake();
+    User::factory()->client()->create(['email' => 'cliente@example.com']);
+
+    $first = $this->postJson('/api/v1/auth/forgot-password', ['email' => 'cliente@example.com']);
+    $again = $this->postJson('/api/v1/auth/forgot-password', ['email' => 'cliente@example.com']);
+
+    $again->assertOk();
+    expect($again->json())->toBe($first->json());
+    Notification::assertCount(1);
+});
+
+it('points the reset link to the configured frontend (HU020)', function () {
+    Notification::fake();
+    config(['app.frontend_url' => 'https://maestros.example/']);
+    $user = User::factory()->client()->create();
+
+    $this->postJson('/api/v1/auth/forgot-password', ['email' => $user->email])->assertOk();
+
+    Notification::assertSentTo($user, ResetPassword::class, function (ResetPassword $notification) use ($user) {
+        expect($notification->toMail($user)->actionUrl)->toStartWith('https://maestros.example/reset-password?token=');
+
+        return true;
+    });
 });
 
 it('validates email field on forgot-password (HU020)', function () {
