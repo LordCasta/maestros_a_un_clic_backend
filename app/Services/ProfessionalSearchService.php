@@ -5,7 +5,7 @@ namespace App\Services;
 use App\Models\Commune;
 use App\Models\ProfessionalProfile;
 use App\Models\User;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Support\ProfessionalSearchResult;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 
@@ -18,7 +18,7 @@ class ProfessionalSearchService
     /**
      * @param  array{q?: string, commune_id?: int, category_id?: int, min_price?: float, max_price?: float, sort?: string, lat?: float, lng?: float}  $filters
      */
-    public function search(array $filters, int $perPage): LengthAwarePaginator
+    public function search(array $filters, int $perPage): ProfessionalSearchResult
     {
         $hasCoords = isset($filters['lat'], $filters['lng']);
         $lat = $hasCoords ? (float) $filters['lat'] : null;
@@ -48,14 +48,13 @@ class ProfessionalSearchService
 
                         return $professional;
                     });
-                    $suggestedPaginator->suggestedFromNeighbors = true;
 
-                    return $suggestedPaginator;
+                    return new ProfessionalSearchResult($suggestedPaginator, suggestedFromNeighbors: true);
                 }
             }
         }
 
-        return $paginator;
+        return new ProfessionalSearchResult($paginator);
     }
 
     private function buildQuery(array $filters, ?float $lat, ?float $lng, bool $isSuggestion = false): Builder
