@@ -76,7 +76,7 @@ class MessageSent implements ShouldBroadcast
 }
 ```
 
-Eventos (los que no tienen ✅ están planeados y se implementan en su módulo):
+Eventos:
 
 | Evento | Canal | Módulo |
 |--------|-------|--------|
@@ -84,7 +84,7 @@ Eventos (los que no tienen ✅ están planeados y se implementan en su módulo):
 | ✅ `message.sent` (`App\Events\MessageSent`) | `booking.{id}` | Chat (HU011). Datos: el mismo `MessageResource` de la API |
 | ✅ `message.deleted` (`App\Events\MessageDeleted`) | `booking.{id}` | Chat (HU043). Datos: `{ "id": 7, "booking_id": 42 }` |
 | ✅ `booking.status-changed` (`App\Events\BookingStatusChanged`) | `booking.{id}` | Ciclo de vida (HU026). Lo emite `BookingService::transition()` en cada cambio de estado. Datos: el mismo `BookingResource` de la API |
-| Notificaciones de Laravel | `App.Models.User.{id}` | Notificaciones |
+| ✅ Notificaciones de Laravel (`app/Notifications`) | `App.Models.User.{id}` | Notificaciones (HU018) |
 
 Las notificaciones (`app/Notifications`) usan los canales `database` y `broadcast`, y definen `databaseType()` y `broadcastType()` con el mismo nombre `recurso.accion` (p. ej. `booking.requested`). Así el frontend recibe la misma forma por el WebSocket y, con HU018, en `GET /notifications`. Tipos existentes: [api/endpoints.md § Notificaciones](api/endpoints.md#notificaciones).
 

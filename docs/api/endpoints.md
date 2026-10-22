@@ -2,11 +2,9 @@
 
 Todas las rutas cuelgan de `/api/v1`. Formato de respuesta, errores y tipos: [convenciones.md](convenciones.md).
 
-Este documento da la visión por módulo y el contrato de lo que falta. El detalle exacto de campos de lo ya implementado está en la documentación interactiva, generada desde el código: `http://127.0.0.1:8000/docs/api` (entorno local).
+Este documento da la visión por módulo: rutas, acceso, reglas de validación y respuestas. El detalle exacto de los campos está en la documentación interactiva, generada desde el código (`http://127.0.0.1:8000/docs/api` en local), y en [openapi.json](openapi.json).
 
 **Leyenda de acceso:** 🌐 público · 🔑 autenticado · 👤 cliente · 🛠 profesional · 🛡 admin
-
-## Parte 1 — Implementados
 
 ### Autenticación
 
@@ -162,6 +160,7 @@ Solo aparecen profesionales **verificados y no bloqueados**. Nunca incluyen emai
 | `min_price`, `max_price` | Rango de tarifa por hora |
 | `sort` | `rating` (por defecto sin coordenadas), `price_asc`, `price_desc`, `distance` (por defecto si se envían `lat` y `lng`) |
 | `lat`, `lng` | Coordenadas para búsqueda por proximidad (HU002, HU040). Filtra por el radio de servicio del profesional (`service_radius_km`) |
+| `available_now` | `1`: solo profesionales que están dentro de su horario en este momento y sin un bloqueo (HU030) |
 | `page`, `per_page` | Paginación |
 
 **200** (paginado):
@@ -186,9 +185,11 @@ Solo aparecen profesionales **verificados y no bloqueados**. Nunca incluyen emai
       "categories": [{ "id": 1, "name": "Plomería", "slug": "plomeria", "icon": "droplets", "parent_id": null }]
     }
   ],
-  "meta": { "current_page": 1, "last_page": 1, "per_page": 15, "total": 1, "suggested_from_neighbors": false }
+  "meta": { "current_page": 1, "last_page": 1, "per_page": 15, "total": 1 }
 }
 ```
+
+Si la comuna pedida no tenía profesionales y la respuesta trae sugerencias de comunas aledañas, cada profesional viene con `is_suggested: true` y `meta` incluye `"suggested_from_neighbors": true`.
 
 #### `GET /professionals/{id}`
 Igual que un elemento del listado, más `services` (solo activos) y `portfolio`:
@@ -997,63 +998,3 @@ Marca una alerta del sistema como atendida y resuelta por el administrador auten
 | POST | `/broadcasting/auth` | 🔑 | Autoriza la suscripción a canales privados y de presencia. Lo llama Laravel Echo solo. |
 
 Canales y configuración del cliente: [../tiempo-real.md](../tiempo-real.md).
-
----
-
-## Parte 2 — Planeados (contrato por módulo)
-
-Rutas y responsables acordados antes de implementar. Al implementar un endpoint se mueve a la Parte 1 con su detalle. Si hace falta cambiar una ruta, se acuerda con el equipo primero.
-
-### Módulo: Cuenta y perfil
-
-| Método | Ruta | Acceso | HU |
-|--------|------|--------|----|
-| POST | `/me/avatar` | 🔑 | HU032 |
-| PUT | `/me/password` | 🔑 | HU019 |
-| DELETE | `/me` | 🔑 | HU023 |
-| POST | `/auth/forgot-password` | 🌐 | HU020 |
-| POST | `/auth/reset-password` | 🌐 | HU020 |
-
-### Módulo: Verificación y administración
-
-| Método | Ruta | Acceso | HU |
-|--------|------|--------|----|
-| GET | `/admin/users` | 🛡 | HU038 |
-| POST | `/admin/users/{id}/block` | 🛡 | HU038 |
-| POST | `/admin/users/{id}/unblock` | 🛡 | HU038 |
-
-### Módulo: Perfil profesional y servicios
-
-Implementado: ver Parte 1 § Perfil, servicios, portafolio e ingresos del profesional.
-
-### Módulo: Agenda y disponibilidad
-
-Implementado: ver Parte 1 § Agenda del profesional y § Profesionales (`/slots`). Falta `available_now` en la búsqueda (HU030, módulo Búsqueda).
-
-### Módulo: Ciclo de vida de la reserva
-
-| Método | Ruta | Acceso | HU |
-|--------|------|--------|----|
-| POST | `/bookings/{id}/reschedule` | 🔑 participante | HU012 |
-
-Todos usan `BookingService::transition()`.
-
-### Módulo: Calificaciones y reportes
-
-| Método | Ruta | Acceso | HU |
-|--------|------|--------|----|
-| GET | `/professionals/{id}/reviews` | 🌐 | HU029 |
-| GET | `/clients/{id}` | 🛠 | HU044 |
-| POST | `/reports` | 🔑 | HU024 |
-| GET | `/admin/reports` | 🛡 | HU024 |
-| POST | `/admin/reports/{id}/resolve` | 🛡 | HU024 |
-| GET | `/admin/alerts` | 🛡 | HU045 |
-| POST | `/admin/alerts/{id}/resolve` | 🛡 | HU045 |
-
-### Módulo: Búsqueda avanzada
-
-Amplía `GET /professionals` con `lat`, `lng` (distancia en km y orden por cercanía, HU002, HU040) y `available_now` (HU030).
-
-### Módulo: Chat y notificaciones
-
-Implementado: ver Parte 1 § Chat de la reserva y § Notificaciones. Los mensajes y el estado en línea viajan por el canal de presencia `presence-booking.{id}`; las notificaciones, por `private-App.Models.User.{id}` ([../tiempo-real.md](../tiempo-real.md)).

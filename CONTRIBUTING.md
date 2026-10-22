@@ -6,7 +6,7 @@ Reglas para desarrollar en paralelo sin pisarnos. Aplican igual en el repo del f
 
 ## 1. Reparto por módulos
 
-Cada módulo tiene **un responsable** que lo hace completo: backend, frontend, tests y documentación. Los módulos y sus endpoints están en [docs/api/endpoints.md](docs/api/endpoints.md) (Parte 2).
+Cada módulo tiene **un responsable** que lo hace completo: backend, frontend, tests y documentación. Los módulos y sus endpoints están en [docs/api/endpoints.md](docs/api/endpoints.md). Los ocho módulos están terminados.
 
 El reparto sigue las cadenas de dependencia, para que cada uno avance sin esperar al otro:
 
