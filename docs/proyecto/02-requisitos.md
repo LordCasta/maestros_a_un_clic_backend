@@ -14,61 +14,61 @@ Requisitos funcionales (historias de usuario) y no funcionales del sistema. La f
 
 ## 2. Requisitos funcionales
 
-Las 49 historias de usuario del proyecto (no existe la HU015: la numeración del documento original la omite). Estado a la fecha de este documento: **27 hechas** y **22 pendientes**. Cada una es un issue en GitHub, donde se marcan sus criterios.
+Las 49 historias de usuario del proyecto (no existe la HU015: la numeración del documento original la omite). Estado a la fecha de este documento: **las 49 están hechas**. Cada una es un issue en GitHub, donde se marcan sus criterios.
 
 ### 2.1 Resumen
 
 | HU | Nombre | Módulo | Responsable | Estado |
 |----|--------|--------|-------------|--------|
 | [HU001](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/2) | Inicio de sesión | auth | LordCasta | ✅ Hecha |
-| [HU002](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/3) | Búsqueda por geolocalización | búsqueda | barenas12 | ⏳ Pendiente |
+| [HU002](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/3) | Búsqueda por geolocalización | búsqueda | barenas12 | ✅ Hecha |
 | [HU003](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/4) | Gestión de disponibilidad y agenda | agenda | LordCasta | ✅ Hecha |
 | [HU004](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/5) | Solicitud y aceptación de servicio | reservas | LordCasta | ✅ Hecha |
-| [HU005](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/6) | Sistema de calificación recíproca | calificaciones | barenas12 | ⏳ Pendiente |
+| [HU005](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/6) | Sistema de calificación recíproca | calificaciones | barenas12 | ✅ Hecha |
 | [HU006](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/7) | Registro de cliente | auth | LordCasta | ✅ Hecha |
 | [HU007](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/8) | Registro de profesional | auth | LordCasta | ✅ Hecha |
-| [HU008](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/9) | Cargue de documentos | verificación-admin | barenas12 | ⏳ Pendiente |
+| [HU008](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/9) | Cargue de documentos | verificación-admin | barenas12 | ✅ Hecha |
 | [HU009](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/10) | Edición de perfil profesional | perfil-profesional | LordCasta | ✅ Hecha |
-| [HU010](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/11) | Filtros y ordenamiento de profesionales | búsqueda | barenas12 | ⏳ Pendiente |
+| [HU010](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/11) | Filtros y ordenamiento de profesionales | búsqueda | barenas12 | ✅ Hecha |
 | [HU011](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/12) | Chat y confirmación de detalles del servicio | chat-notificaciones | LordCasta | ✅ Hecha |
 | [HU012](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/13) | Cancelación y reprogramación de reserva | reservas | LordCasta | ✅ Hecha |
-| [HU013](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/14) | Validación de identidad y antecedentes | verificación-admin | barenas12 | ⏳ Pendiente |
-| [HU014](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/15) | Revisión y aprobación de documentos del profesional | verificación-admin | barenas12 | ⏳ Pendiente |
+| [HU013](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/14) | Validación de identidad y antecedentes | verificación-admin | barenas12 | ✅ Hecha |
+| [HU014](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/15) | Revisión y aprobación de documentos del profesional | verificación-admin | barenas12 | ✅ Hecha |
 | [HU016](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/16) | Historial de servicios del cliente | reservas | LordCasta | ✅ Hecha |
 | [HU017](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/17) | Historial de servicios del profesional | reservas | LordCasta | ✅ Hecha |
 | [HU018](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/18) | Notificaciones del sistema | chat-notificaciones | LordCasta | ✅ Hecha |
-| [HU019](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/19) | Cambio de contraseña | cuenta | barenas12 | ⏳ Pendiente |
-| [HU020](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/20) | Recuperación de contraseña | cuenta | barenas12 | ⏳ Pendiente |
+| [HU019](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/19) | Cambio de contraseña | cuenta | barenas12 | ✅ Hecha |
+| [HU020](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/20) | Recuperación de contraseña | cuenta | barenas12 | ✅ Hecha |
 | [HU021](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/21) | Cerrar sesión | auth | LordCasta | ✅ Hecha |
-| [HU022](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/22) | Registro de ubicación manual | cuenta | barenas12 | ⏳ Pendiente |
-| [HU023](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/23) | Eliminación de cuenta | cuenta | barenas12 | ⏳ Pendiente |
-| [HU024](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/24) | Reporte de usuarios | calificaciones | barenas12 | ⏳ Pendiente |
+| [HU022](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/22) | Registro de ubicación manual | cuenta | barenas12 | ✅ Hecha |
+| [HU023](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/23) | Eliminación de cuenta | cuenta | barenas12 | ✅ Hecha |
+| [HU024](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/24) | Reporte de usuarios | calificaciones | barenas12 | ✅ Hecha |
 | [HU025](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/25) | Visualización de disponibilidad del profesional | agenda | LordCasta | ✅ Hecha |
 | [HU026](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/26) | Estado del servicio | reservas | LordCasta | ✅ Hecha |
 | [HU027](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/27) | Confirmación de inicio de servicio | reservas | LordCasta | ✅ Hecha |
 | [HU028](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/28) | Confirmación de finalización de servicio | reservas | LordCasta | ✅ Hecha |
-| [HU029](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/29) | Visualización de comentarios | calificaciones | barenas12 | ⏳ Pendiente |
-| [HU030](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/30) | Filtro por disponibilidad inmediata | búsqueda | barenas12 | ⏳ Pendiente |
-| [HU031](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/31) | Edición de perfil del cliente | cuenta | barenas12 | ⏳ Pendiente |
-| [HU032](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/32) | Subida de foto de perfil | cuenta | barenas12 | ⏳ Pendiente |
-| [HU033](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/33) | Visualización de servicios por categoría | búsqueda | barenas12 | ⏳ Pendiente |
+| [HU029](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/29) | Visualización de comentarios | calificaciones | barenas12 | ✅ Hecha |
+| [HU030](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/30) | Filtro por disponibilidad inmediata | búsqueda | barenas12 | ✅ Hecha |
+| [HU031](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/31) | Edición de perfil del cliente | cuenta | barenas12 | ✅ Hecha |
+| [HU032](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/32) | Subida de foto de perfil | cuenta | barenas12 | ✅ Hecha |
+| [HU033](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/33) | Visualización de servicios por categoría | búsqueda | barenas12 | ✅ Hecha |
 | [HU034](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/34) | Guardar profesionales favoritos | favoritos | LordCasta | ✅ Hecha |
 | [HU035](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/35) | Visualización de favoritos | favoritos | LordCasta | ✅ Hecha |
 | [HU036](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/36) | Confirmación de reserva por el cliente | reservas | LordCasta | ✅ Hecha |
 | [HU037](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/37) | Visualización de ingresos del profesional | perfil-profesional | LordCasta | ✅ Hecha |
-| [HU038](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/38) | Bloqueo de usuarios problemáticos | verificación-admin | barenas12 | ⏳ Pendiente |
-| [HU039](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/39) | Búsqueda por nombre | búsqueda | barenas12 | ⏳ Pendiente |
-| [HU040](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/40) | Visualización de distancia | búsqueda | barenas12 | ⏳ Pendiente |
+| [HU038](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/38) | Bloqueo de usuarios problemáticos | verificación-admin | barenas12 | ✅ Hecha |
+| [HU039](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/39) | Búsqueda por nombre | búsqueda | barenas12 | ✅ Hecha |
+| [HU040](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/40) | Visualización de distancia | búsqueda | barenas12 | ✅ Hecha |
 | [HU041](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/41) | Indicador de estado en línea | chat-notificaciones | LordCasta | ✅ Hecha |
 | [HU042](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/42) | Adjuntar archivos en el chat | chat-notificaciones | LordCasta | ✅ Hecha |
 | [HU043](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/43) | Eliminación de mensajes | chat-notificaciones | LordCasta | ✅ Hecha |
-| [HU044](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/44) | Visualización de perfil del cliente | calificaciones | barenas12 | ⏳ Pendiente |
-| [HU045](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/45) | Alerta por baja calificación | calificaciones | barenas12 | ⏳ Pendiente |
+| [HU044](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/44) | Visualización de perfil del cliente | calificaciones | barenas12 | ✅ Hecha |
+| [HU045](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/45) | Alerta por baja calificación | calificaciones | barenas12 | ✅ Hecha |
 | [HU046](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/46) | Ordenamiento por precio | búsqueda | LordCasta | ✅ Hecha |
 | [HU047](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/47) | Visualización de tiempo estimado | perfil-profesional | LordCasta | ✅ Hecha |
 | [HU048](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/48) | Validación de datos obligatorios | auth | LordCasta | ✅ Hecha |
 | [HU049](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/49) | Visualización de servicios en proceso | reservas | LordCasta | ✅ Hecha |
-| [HU050](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/50) | Cierre de sesión por inactividad | cuenta | barenas12 | ⏳ Pendiente |
+| [HU050](https://github.com/LordCasta/maestros_a_un_clic_backend/issues/50) | Cierre de sesión por inactividad | cuenta | barenas12 | ✅ Hecha |
 
 ### 2.2 Detalle
 
@@ -95,7 +95,7 @@ Criterios de aceptación:
 3. Se despliega una lista ordenada por proximidad (km).
 4. Si no hay profesionales en la comuna, el sistema sugiere los más cercanos en comunas aledañas.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU003 · Gestión de disponibilidad y agenda
 
@@ -134,7 +134,7 @@ Criterios de aceptación:
 3. Se permite dejar un comentario opcional sobre el servicio o la atención.
 4. El promedio de estrellas se actualiza automáticamente en el perfil del usuario calificado.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU006 · Registro de cliente
 
@@ -175,7 +175,7 @@ Criterios de aceptación:
 5. El profesional puede ver el estado de revisión (Pendiente, Aprobado, Rechazado) y el motivo si es rechazado.
 6. El profesional puede reemplazar documentos rechazados y reenviar a verificación.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU009 · Edición de perfil profesional
 
@@ -203,7 +203,7 @@ Criterios de aceptación:
 4. Los resultados muestran información clave: nombre, calificación promedio, precio, distancia y disponibilidad próxima.
 5. Al aplicar filtros, el listado y el mapa se actualizan sin recargar toda la página.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU011 · Chat y confirmación de detalles del servicio
 
@@ -245,7 +245,7 @@ Criterios de aceptación:
 4. Si la verificación es rechazada, el usuario recibe el motivo y puede reenviar la documentación.
 5. Mientras el usuario esté "Pendiente" o "Rechazado", el sistema limita acciones críticas (publicar servicios, confirmar reservas) según el rol.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU014 · Revisión y aprobación de documentos del profesional
 
@@ -261,7 +261,7 @@ Criterios de aceptación:
 6. Al rechazar, el sistema notifica al profesional el motivo y mantiene el estado en "Rechazado" hasta que reenvíe la información.
 7. El sistema registra auditoría de la revisión: quién revisó, fecha/hora y decisión tomada.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU016 · Historial de servicios del cliente
 
@@ -313,7 +313,7 @@ Criterios de aceptación:
 3. El sistema confirma el cambio exitoso.
 4. Si la contraseña actual es incorrecta, muestra error.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU020 · Recuperación de contraseña
 
@@ -326,7 +326,7 @@ Criterios de aceptación:
 3. El enlace permite crear una nueva contraseña.
 4. El enlace tiene un tiempo de expiración.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU021 · Cerrar sesión
 
@@ -351,7 +351,7 @@ Criterios de aceptación:
 3. Se usa esa ubicación para búsquedas.
 4. Se puede actualizar en cualquier momento.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU023 · Eliminación de cuenta
 
@@ -364,7 +364,7 @@ Criterios de aceptación:
 3. La cuenta se elimina del sistema.
 4. Se muestra mensaje de confirmación.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU024 · Reporte de usuarios
 
@@ -377,7 +377,7 @@ Criterios de aceptación:
 3. El reporte queda registrado en el sistema.
 4. El administrador puede revisar los reportes.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU025 · Visualización de disponibilidad del profesional
 
@@ -442,7 +442,7 @@ Criterios de aceptación:
 3. Se ordenan por fecha o relevancia.
 4. Solo usuarios que usaron el servicio pueden comentar.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU030 · Filtro por disponibilidad inmediata
 
@@ -455,7 +455,7 @@ Criterios de aceptación:
 3. Se actualiza en tiempo real.
 4. Se combina con otros filtros (precio, calificación, etc.).
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU031 · Edición de perfil del cliente
 
@@ -468,7 +468,7 @@ Criterios de aceptación:
 3. Se validan los campos obligatorios.
 4. Los cambios se reflejan inmediatamente.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU032 · Subida de foto de perfil
 
@@ -481,7 +481,7 @@ Criterios de aceptación:
 3. La foto se actualiza en el perfil.
 4. Se puede cambiar en cualquier momento.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU033 · Visualización de servicios por categoría
 
@@ -494,7 +494,7 @@ Criterios de aceptación:
 3. Se puede navegar entre categorías.
 4. Se muestran resultados relacionados.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU034 · Guardar profesionales favoritos
 
@@ -559,7 +559,7 @@ Criterios de aceptación:
 3. Se guarda el motivo del bloqueo.
 4. Se puede desbloquear posteriormente.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU039 · Búsqueda por nombre
 
@@ -572,7 +572,7 @@ Criterios de aceptación:
 3. Se puede seleccionar el perfil.
 4. Funciona en tiempo real.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU040 · Visualización de distancia
 
@@ -585,7 +585,7 @@ Criterios de aceptación:
 3. Aparece en listados y perfil.
 4. Se usa para ordenar resultados.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU041 · Indicador de estado en línea
 
@@ -637,7 +637,7 @@ Criterios de aceptación:
 3. Se pueden ver comentarios.
 4. Se accede desde la solicitud.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU045 · Alerta por baja calificación
 
@@ -650,7 +650,7 @@ Criterios de aceptación:
 3. Se puede revisar el perfil.
 4. Se guarda el registro.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 #### HU046 · Ordenamiento por precio
 
@@ -715,7 +715,7 @@ Criterios de aceptación:
 3. Muestra mensaje informativo.
 4. Redirige al inicio de sesión.
 
-Estado: ⏳ Pendiente
+Estado: ✅ Hecha
 
 ## 3. Requisitos no funcionales
 
@@ -728,12 +728,14 @@ Se formulan con el modelo de calidad **ISO/IEC 25010**. Cada uno tiene una meta 
 | RNF-SEG-01 | Solo usuarios autenticados acceden a sus datos | Autenticación por token (Laravel Sanctum) en todas las rutas privadas | Tests de 401 sin token en cada módulo | ✅ |
 | RNF-SEG-02 | Cada usuario solo opera sobre sus recursos y según su rol | Middleware `role:` (tipo de cuenta) y Policies (dueño del recurso); los usuarios bloqueados no entran (`not_blocked`) | Tests de 403 por endpoint (otro usuario, otro rol) | ✅ |
 | RNF-SEG-03 | Contraseñas protegidas | Hash bcrypt (cast `hashed`), mínimo 8 caracteres y confirmación | Tests de registro | ✅ |
-| RNF-SEG-04 | Resistencia a fuerza bruta en el acceso | Máximo 10 intentos por minuto en registro e inicio de sesión (`throttle:10,1`) | Revisión de rutas; prueba manual | ✅ |
+| RNF-SEG-04 | Resistencia a fuerza bruta en el acceso | Máximo 10 intentos por minuto en registro, inicio de sesión y recuperación de contraseña (`throttle:10,1`) | Revisión de rutas; prueba manual | ✅ |
 | RNF-SEG-05 | Toda entrada se valida en el servidor | FormRequest por endpoint con errores 422 por campo. El cliente valida además con Zod, sin reemplazar al servidor | Tests de validación en cada endpoint | ✅ |
 | RNF-SEG-06 | Los documentos de identidad y los adjuntos del chat no son públicos | Disco privado y URL firmada que vence (60 min); sin firma responde 403 | ChatTest; prueba manual de URL sin firma | ✅ |
 | RNF-SEG-07 | Tráfico cifrado | HTTPS (TLS) y WebSockets seguros (`wss`) en producción | Checklist de despliegue | 🎯 En despliegue |
 | RNF-SEG-08 | La API solo acepta peticiones del frontend oficial | Publicar `config/cors.php` con el dominio del frontend en producción (hoy acepta cualquier origen, valor por defecto de Laravel) | Checklist de despliegue | ⚠️ Pendiente |
 | RNF-SEG-09 | Las dependencias no tienen vulnerabilidades conocidas | Auditoría de dependencias (`composer audit`, `npm audit`) en cada PR | CI (job "Seguridad de dependencias") | ✅ |
+| RNF-SEG-10 | No se puede averiguar qué correos tienen cuenta | La recuperación de contraseña responde igual exista o no el correo | PasswordResetTest | ✅ |
+| RNF-SEG-11 | Las sesiones abandonadas se cierran | Cierre automático tras 15 minutos sin actividad en el navegador (HU050) | Prueba manual | ✅ |
 
 ### 3.2 Privacidad y protección de datos
 
@@ -741,8 +743,9 @@ Se formulan con el modelo de calidad **ISO/IEC 25010**. Cada uno tiene una meta 
 |----|-----------|----------------|--------------|--------|
 | RNF-PRI-01 | El perfil público no expone datos de contacto | `ProfessionalResource` excluye correo, teléfono, dirección y coordenadas | ProfessionalsTest | ✅ |
 | RNF-PRI-02 | El chat solo lo ven las partes de la reserva | Policy `chat` (ni otros usuarios ni el administrador) | ChatTest | ✅ |
+| RNF-PRI-05 | El perfil de un cliente solo lo ve el profesional que tiene una reserva con él | Policy `viewClientProfile` (HU044) | UserReportsAndModerationTest | ✅ |
 | RNF-PRI-03 | Autorización informada para el tratamiento de datos (Ley 1581) | Aceptación explícita de la política de tratamiento al registrarse | — | ⚠️ Pendiente (ver [07](07-seguridad-y-privacidad.md)) |
-| RNF-PRI-04 | Derecho de supresión | Eliminación de cuenta con anonimización (HU023, decisión D12) | — | ⏳ En desarrollo |
+| RNF-PRI-04 | Derecho de supresión | Eliminación de cuenta con anonimización: se borran datos de contacto, ubicación, fotos y documentos, y se conserva el historial de la otra parte (HU023, decisión D12) | AccountTest | ✅ |
 
 ### 3.3 Integridad y auditoría
 
@@ -805,4 +808,4 @@ Se formulan con el modelo de calidad **ISO/IEC 25010**. Cada uno tiene una meta 
 | RNF-ESC-02 | El tiempo real puede crecer | Reverb admite varias instancias coordinadas con Redis | 🎯 Futuro |
 | RNF-ESC-03 | Los archivos pueden salir del servidor | Discos de Laravel intercambiables (local → S3) sin cambiar el código | 🎯 Futuro |
 
-**Leyenda:** ✅ cumplido · 🎯 meta que se verifica en el despliegue · ⚠️ acción pendiente · ⏳ depende de una HU en desarrollo.
+**Leyenda:** ✅ cumplido · 🎯 meta que se verifica en el despliegue · ⚠️ acción pendiente.

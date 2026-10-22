@@ -387,7 +387,7 @@ flowchart TB
     subgraph front["Frontend · Vue 3 + TypeScript"]
         direction TB
         app["app/<br/>router, layouts, guards"]
-        modules["modules/<br/>auth · professionals · bookings · schedule · chat ·<br/>notifications · professional-profile · favorites · catalog"]
+        modules["modules/<br/>auth · account · professionals · bookings · schedule · chat ·<br/>notifications · professional-profile · favorites · catalog ·<br/>verification · admin · dashboard · home"]
         shared["shared/<br/>ui (componentes base) · http · realtime · forms · types"]
         app --> modules --> shared
     end
@@ -398,7 +398,7 @@ flowchart TB
         requests["FormRequest<br/>(validación)"]
         controllers["Controllers"]
         policies["Policies<br/>(autorización)"]
-        services["Services<br/>Booking · Availability · Chat · ProfessionalProfile · Upload"]
+        services["Services<br/>Auth · Account · Booking · Availability · Chat ·<br/>ProfessionalProfile · ProfessionalSearch · Review ·<br/>Verification · Moderation · Upload"]
         resources["Resources<br/>(forma de las respuestas)"]
         events["Eventos y notificaciones"]
         routes --> requests --> controllers

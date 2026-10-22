@@ -35,12 +35,12 @@ Cada pull request a `main` ejecuta automáticamente, y GitHub no permite fusiona
 
 ## 4. Reporte de resultados
 
-Ejecución del 16 de octubre de 2026 sobre `main`:
+Ejecución del 22 de octubre de 2026 sobre `main`, con las 49 historias terminadas:
 
 | Suite | Pruebas | Resultado | Aserciones | Duración |
 |-------|---------|-----------|------------|----------|
-| Backend (Pest) | 135 | ✅ 135 aprobadas | 574 | ≈ 21 s |
-| Frontend (Vitest) | 102 en 26 archivos | ✅ 102 aprobadas | — | ≈ 80 s (en Windows) |
+| Backend (Pest) | 220 | ✅ 220 aprobadas | 992 | ≈ 23 s |
+| Frontend (Vitest) | 158 en 38 archivos | ✅ 158 aprobadas | — | ≈ 60 s (en Windows) |
 
 ### 4.1 Backend: pruebas por archivo
 
@@ -52,12 +52,16 @@ Ejecución del 16 de octubre de 2026 sobre `main`:
 | BookingRescheduleTest | Reprogramar y cancelar con sus reglas y notificaciones |
 | ChatTest | Enviar texto e imágenes, chat cerrado, permisos, leídos y eliminar mensajes |
 | ApiErrorsTest | Formato estándar de errores (404, 405, 422, 401, 403) |
-| ProfessionalsTest | Búsqueda pública y privacidad del perfil |
+| ProfessionalsTest | Búsqueda pública, filtros, orden, cercanía, comunas aledañas, próxima hora libre y privacidad del perfil |
 | ProfessionalSlotsTest | Cálculo de horas libres |
 | NotificationsTest | Listado, contador y marcar como leídas |
 | EarningsTest | Ingresos por rango y validaciones |
 | BookingHistoryTest | Historial de estados y evento de estado |
-| Auth/*, RegisterClientTest | Registro, inicio y cierre de sesión |
+| Auth/*, RegisterClientTest | Registro, inicio y cierre de sesión, y recuperación de contraseña sin revelar qué correos existen |
+| AccountTest | Editar datos y ubicación, foto, cambio de contraseña y eliminación de cuenta con anonimización |
+| VerificationTest, AdminVerificationTest | Cargue y reemplazo de documentos, y revisión del administrador |
+| ReviewsTest | Calificación recíproca y promedio |
+| UserReportsAndModerationTest | Reportes, bloqueo de usuarios, alertas, perfil del cliente, comentarios públicos y "disponible ahora" |
 | FavoritesTest, CatalogTest, BroadcastingTest, ApiDocsTest, DatabaseSeederTest | Favoritos, catálogos, autorización de canales, documentación de la API y datos de demostración |
 
 ### 4.2 Frontend: pruebas por área
@@ -69,6 +73,9 @@ Ejecución del 16 de octubre de 2026 sobre `main`:
 | Chat y tiempo real | BookingChat, presence |
 | Notificaciones | NotificationBell |
 | Perfil profesional | schemas, ServiceFormModal, EarningsView, ranges |
+| Cuenta | ChangePasswordForm, DeleteAccountModal, ManualLocationForm, schemas, PasswordRecovery, RegisterProfessionalForm |
+| Verificación y administración | AdminVerifications, ReplaceDocumentModal, schemas |
+| Calificaciones y reportes | ReviewBookingModal, ReportUserModal, ProfessionalCard |
 | Base | router (guards), cliente HTTP, formularios, formato, tokens, verificador de colores, favoritos, esquemas de auth |
 
 ## 5. Cómo ejecutar las pruebas
@@ -91,3 +98,4 @@ npm run build
 - **Pruebas de extremo a extremo** de los recorridos principales con un navegador automatizado (Playwright).
 - **Prueba de carga** para el requisito RNF-REN-01, sobre el servidor de producción.
 - **Auditoría de accesibilidad** (Lighthouse) para RNF-USA-04.
+- **Prueba automatizada del cierre por inactividad** (HU050) y de las vistas del administrador (usuarios, reportes y alertas), que hoy se prueban a mano.
