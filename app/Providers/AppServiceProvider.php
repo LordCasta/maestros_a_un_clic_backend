@@ -33,7 +33,7 @@ class AppServiceProvider extends ServiceProvider
     private function configurePasswordResetUrl(): void
     {
         ResetPassword::createUrlUsing(function (User $user, string $token) {
-            $frontendUrl = rtrim((string) (config('app.frontend_url') ?? env('FRONTEND_URL', 'http://localhost:5173')), '/');
+            $frontendUrl = rtrim(config('app.frontend_url'), '/');
 
             return "{$frontendUrl}/reset-password?token={$token}&email=".urlencode($user->email);
         });

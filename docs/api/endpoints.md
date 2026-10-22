@@ -87,6 +87,8 @@ Logout revoca el token actual y devuelve `data: null`. `me` devuelve el mismo ob
 
 #### `POST /auth/forgot-password`
 Envía al correo del usuario el enlace de recuperación con token de un solo uso (expira en 60 minutos).
+La respuesta es la misma exista o no la cuenta, para no revelar qué correos están registrados.
+El enlace apunta a `FRONTEND_URL/reset-password?token=…&email=…`.
 
 | Campo | Regla |
 |-------|-------|
@@ -94,8 +96,8 @@ Envía al correo del usuario el enlace de recuperación con token de un solo uso
 
 | Respuesta | Cuándo |
 |-----------|--------|
-| **200** | `message: "Te enviamos por correo el enlace para restablecer tu contraseña."`, `data: null` |
-| **422** | Correo no registrado o formato inválido |
+| **200** | `message: "Si el correo está registrado, te enviamos el enlace para restablecer tu contraseña."`, `data: null`. También si el correo no existe |
+| **422** | Formato de correo inválido |
 
 #### `POST /auth/reset-password`
 Restablece la contraseña utilizando el token recibido por correo electrónico.

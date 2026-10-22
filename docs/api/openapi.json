@@ -16,6 +16,1074 @@
         }
     ],
     "paths": {
+        "/me": {
+            "patch": {
+                "operationId": "account.update",
+                "summary": "HU022, HU031: actualizar datos del usuario autenticado (ubicaci\u00f3n manual, nombre, tel\u00e9fono)",
+                "tags": [
+                    "Account"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProfileRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Perfil y ubicaci\u00f3n actualizados correctamente."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "account.destroy",
+                "summary": "HU023: eliminaci\u00f3n l\u00f3gica de cuenta con verificaci\u00f3n de contrase\u00f1a y sin reservas activas",
+                "tags": [
+                    "Account"
+                ],
+                "parameters": [
+                    {
+                        "name": "current_password",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Tu cuenta ha sido eliminada correctamente."
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/me/avatar": {
+            "post": {
+                "operationId": "account.uploadAvatar",
+                "summary": "HU032: subir o cambiar la foto de perfil del usuario",
+                "tags": [
+                    "Account"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UploadAvatarRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Foto de perfil actualizada correctamente."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/UserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/me/password": {
+            "put": {
+                "operationId": "account.updatePassword",
+                "summary": "HU019: cambiar contrase\u00f1a con la contrase\u00f1a actual",
+                "tags": [
+                    "Account"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Contrase\u00f1a actualizada correctamente."
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/alerts": {
+            "get": {
+                "operationId": "adminAlert.index",
+                "summary": "HU045: bandeja de alertas del sistema (bajas calificaciones, reportes, etc.)",
+                "tags": [
+                    "AdminAlert"
+                ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "allOf": [
+                                                    {
+                                                        "$ref": "#/components/schemas/AdminAlertResource"
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "required": [
+                                                            "user",
+                                                            "resolver"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/alerts/{alert}/resolve": {
+            "post": {
+                "operationId": "adminAlert.resolve",
+                "summary": "HU045: marcar una alerta como resuelta",
+                "tags": [
+                    "AdminAlert"
+                ],
+                "parameters": [
+                    {
+                        "name": "alert",
+                        "in": "path",
+                        "required": true,
+                        "description": "The alert ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Alerta marcada como resuelta."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminAlertResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/reports": {
+            "get": {
+                "operationId": "adminReport.index",
+                "summary": "HU024: bandeja de reportes de usuarios para moderadores/administradores",
+                "tags": [
+                    "AdminReport"
+                ],
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "allOf": [
+                                                    {
+                                                        "$ref": "#/components/schemas/ReportResource"
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "required": [
+                                                            "reporter",
+                                                            "reported_user",
+                                                            "resolver"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/reports/{report}/resolve": {
+            "post": {
+                "operationId": "adminReport.resolve",
+                "summary": "HU024: resolver o desestimar un reporte de usuario con notas y bloqueo opcional",
+                "tags": [
+                    "AdminReport"
+                ],
+                "parameters": [
+                    {
+                        "name": "report",
+                        "in": "path",
+                        "required": true,
+                        "description": "The report ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResolveReportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Reporte actualizado correctamente."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ReportResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/users": {
+            "get": {
+                "operationId": "adminUser.index",
+                "summary": "HU038: listado de usuarios con filtros para moderaci\u00f3n y administraci\u00f3n",
+                "tags": [
+                    "AdminUser"
+                ],
+                "parameters": [
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "q",
+                        "in": "query",
+                        "description": "'blocked', 'active'",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "allOf": [
+                                                    {
+                                                        "$ref": "#/components/schemas/AdminUserResource"
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "required": [
+                                                            "commune",
+                                                            "blocked_by"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/users/{user}/block": {
+            "post": {
+                "operationId": "adminUser.block",
+                "summary": "HU038: bloquear a un usuario problem\u00e1tico",
+                "tags": [
+                    "AdminUser"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/BlockUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Usuario bloqueado correctamente."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminUserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "No se puede bloquear a un administrador."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/users/{user}/unblock": {
+            "post": {
+                "operationId": "adminUser.unblock",
+                "summary": "HU038: desbloquear a un usuario",
+                "tags": [
+                    "AdminUser"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Usuario desbloqueado correctamente."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminUserResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/verifications": {
+            "get": {
+                "operationId": "adminVerification.index",
+                "summary": "HU014: bandeja de solicitudes de verificaci\u00f3n para el administrador con filtros",
+                "tags": [
+                    "AdminVerification"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "allOf": [
+                                                    {
+                                                        "$ref": "#/components/schemas/VerificationRequestResource"
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "required": [
+                                                            "user",
+                                                            "reviewer",
+                                                            "documents"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/verifications/{verificationRequest}": {
+            "get": {
+                "operationId": "adminVerification.show",
+                "summary": "HU014: detalle completo de una solicitud de verificaci\u00f3n",
+                "tags": [
+                    "AdminVerification"
+                ],
+                "parameters": [
+                    {
+                        "name": "verificationRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The verification request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        },
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/VerificationRequestResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "user",
+                                                        "reviewer",
+                                                        "documents"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/verifications/{verificationRequest}/approve": {
+            "post": {
+                "operationId": "adminVerification.approve",
+                "summary": "HU014: aprobar una solicitud de verificaci\u00f3n y el usuario correspondiente",
+                "tags": [
+                    "AdminVerification"
+                ],
+                "parameters": [
+                    {
+                        "name": "verificationRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The verification request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Solicitud de verificaci\u00f3n aprobada."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/VerificationRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/admin/verifications/{verificationRequest}/reject": {
+            "post": {
+                "operationId": "adminVerification.reject",
+                "summary": "HU014: rechazar una solicitud de verificaci\u00f3n con motivo obligatorio",
+                "tags": [
+                    "AdminVerification"
+                ],
+                "parameters": [
+                    {
+                        "name": "verificationRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The verification request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminRejectVerificationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Solicitud de verificaci\u00f3n rechazada."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/VerificationRequestResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/verification-documents/{document}": {
+            "patch": {
+                "operationId": "adminVerification.updateDocument",
+                "summary": "HU014: marcar documento individual como aprobado o rechazado con motivo",
+                "tags": [
+                    "AdminVerification"
+                ],
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "description": "The document ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/AdminUpdateVerificationDocumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Estado del documento actualizado."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/VerificationDocumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/admin/verification-documents/{document}/file": {
+            "get": {
+                "operationId": "adminVerification.file",
+                "summary": "HU014: visualizaci\u00f3n o descarga segura del archivo privado",
+                "tags": [
+                    "AdminVerification"
+                ],
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "description": "The document ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        },
+                        "headers": {
+                            "Transfer-Encoding": {
+                                "required": true,
+                                "schema": {
+                                    "type": "string",
+                                    "enum": [
+                                        "chunked"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/auth/register/client": {
             "post": {
                 "operationId": "auth.registerClient",
@@ -233,6 +1301,105 @@
                                     },
                                     "required": [
                                         "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/auth/forgot-password": {
+            "post": {
+                "operationId": "auth.forgotPassword",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ForgotPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Si el correo est\u00e1 registrado, te enviamos el enlace para restablecer tu contrase\u00f1a."
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/auth/reset-password": {
+            "post": {
+                "operationId": "auth.resetPassword",
+                "tags": [
+                    "Auth"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ResetPasswordRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        },
+                                        "data": {
+                                            "type": "null"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
                                     ]
                                 }
                             }
@@ -646,27 +1813,8 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object",
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer"
-                                                },
-                                                "last_page": {
-                                                    "type": "integer"
-                                                },
-                                                "per_page": {
-                                                    "type": "integer"
-                                                },
-                                                "total": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "required": [
-                                                "current_page",
-                                                "last_page",
-                                                "per_page",
-                                                "total"
-                                            ]
+                                            "type": "array",
+                                            "items": {}
                                         }
                                     },
                                     "required": [
@@ -852,7 +2000,8 @@
                                                         "service",
                                                         "client",
                                                         "professional",
-                                                        "commune"
+                                                        "commune",
+                                                        "reviews"
                                                     ]
                                                 }
                                             ]
@@ -1580,6 +2729,66 @@
                 }
             }
         },
+        "/clients/{id}": {
+            "get": {
+                "operationId": "clientProfile.show",
+                "summary": "HU044: vista del perfil del cliente por parte del profesional",
+                "tags": [
+                    "ClientProfile"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        },
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/ClientProfileResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "commune"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/professional/earnings": {
             "get": {
                 "operationId": "earnings",
@@ -2187,27 +3396,8 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object",
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer"
-                                                },
-                                                "last_page": {
-                                                    "type": "integer"
-                                                },
-                                                "per_page": {
-                                                    "type": "integer"
-                                                },
-                                                "total": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "required": [
-                                                "current_page",
-                                                "last_page",
-                                                "per_page",
-                                                "total"
-                                            ]
+                                            "type": "array",
+                                            "items": {}
                                         }
                                     },
                                     "required": [
@@ -2516,6 +3706,16 @@
                         }
                     },
                     {
+                        "name": "subcategory_id",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ]
+                        }
+                    },
+                    {
                         "name": "min_price",
                         "in": "query",
                         "schema": {
@@ -2549,7 +3749,42 @@
                                 "rating",
                                 "price_asc",
                                 "price_desc",
+                                "distance",
                                 null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "lat",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "number",
+                                "null"
+                            ],
+                            "minimum": -90,
+                            "maximum": 90
+                        }
+                    },
+                    {
+                        "name": "lng",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "number",
+                                "null"
+                            ],
+                            "minimum": -180,
+                            "maximum": 180
+                        }
+                    },
+                    {
+                        "name": "available_now",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "boolean",
+                                "null"
                             ]
                         }
                     },
@@ -2597,27 +3832,8 @@
                                             }
                                         },
                                         "meta": {
-                                            "type": "object",
-                                            "properties": {
-                                                "current_page": {
-                                                    "type": "integer"
-                                                },
-                                                "last_page": {
-                                                    "type": "integer"
-                                                },
-                                                "per_page": {
-                                                    "type": "integer"
-                                                },
-                                                "total": {
-                                                    "type": "integer"
-                                                }
-                                            },
-                                            "required": [
-                                                "current_page",
-                                                "last_page",
-                                                "per_page",
-                                                "total"
-                                            ]
+                                            "type": "array",
+                                            "items": {}
                                         }
                                     },
                                     "required": [
@@ -3198,6 +4414,402 @@
                     }
                 }
             }
+        },
+        "/reports": {
+            "post": {
+                "operationId": "report.store",
+                "summary": "HU024: reportar a un usuario por mal comportamiento, fraude o incumplimiento",
+                "tags": [
+                    "Report"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreReportRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Reporte enviado correctamente."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/ReportResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/professionals/{id}/reviews": {
+            "get": {
+                "operationId": "review.forProfessional",
+                "summary": "HU029: listado p\u00fablico de calificaciones y rese\u00f1as recibidas por un profesional",
+                "tags": [
+                    "Review"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        },
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "allOf": [
+                                                    {
+                                                        "$ref": "#/components/schemas/ReviewResource"
+                                                    },
+                                                    {
+                                                        "type": "object",
+                                                        "required": [
+                                                            "reviewer"
+                                                        ]
+                                                    }
+                                                ]
+                                            }
+                                        },
+                                        "meta": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/bookings/{booking}/review": {
+            "post": {
+                "operationId": "review.store",
+                "summary": "HU005: calificar la experiencia con la otra parte tras finalizar el servicio",
+                "tags": [
+                    "Review"
+                ],
+                "parameters": [
+                    {
+                        "name": "booking",
+                        "in": "path",
+                        "required": true,
+                        "description": "The booking ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreReviewRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Calificaci\u00f3n enviada correctamente."
+                                        },
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/ReviewResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "reviewer",
+                                                        "reviewee"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/verification": {
+            "get": {
+                "operationId": "verification.show",
+                "summary": "HU008, HU013: consultar el estado actual de verificaci\u00f3n y los documentos cargados",
+                "tags": [
+                    "Verification"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "null"
+                                        },
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "verification_status": {
+                                                    "$ref": "#/components/schemas/VerificationStatus"
+                                                },
+                                                "latest_request": {
+                                                    "allOf": [
+                                                        {
+                                                            "$ref": "#/components/schemas/VerificationRequestResource"
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "required": [
+                                                                "documents"
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "verification_status",
+                                                "latest_request"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "verification.store",
+                "summary": "HU008, HU013: enviar solicitud inicial de verificaci\u00f3n con documentos KYC",
+                "tags": [
+                    "Verification"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreVerificationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Documentos enviados para verificaci\u00f3n."
+                                        },
+                                        "data": {
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/VerificationRequestResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "documents"
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
+        },
+        "/verification/documents/{document}": {
+            "post": {
+                "operationId": "verification.replaceDocument",
+                "summary": "HU008: reemplazar un documento rechazado y reenviar a revisi\u00f3n",
+                "tags": [
+                    "Verification"
+                ],
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "description": "The document ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ReplaceVerificationDocumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string",
+                                            "const": "Documento reemplazado y solicitud reenviada a verificaci\u00f3n."
+                                        },
+                                        "data": {
+                                            "$ref": "#/components/schemas/VerificationDocumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "success",
+                                        "message",
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -3208,6 +4820,210 @@
             }
         },
         "schemas": {
+            "AdminAlertResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserSummaryResource"
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/AlertType"
+                    },
+                    "data": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {}
+                    },
+                    "resolver": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/UserSummaryResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "resolved_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "type",
+                    "data",
+                    "resolved_at",
+                    "created_at"
+                ],
+                "title": "AdminAlertResource"
+            },
+            "AdminRejectVerificationRequest": {
+                "type": "object",
+                "description": "HU014: motivo obligatorio para rechazar una solicitud de verificaci\u00f3n.",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "reason"
+                ],
+                "title": "AdminRejectVerificationRequest"
+            },
+            "AdminUpdateVerificationDocumentRequest": {
+                "type": "object",
+                "description": "HU014: marcar documento individual como aprobado o rechazado con motivo.",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "approved",
+                            "rejected"
+                        ]
+                    },
+                    "rejection_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "status"
+                ],
+                "title": "AdminUpdateVerificationDocumentRequest"
+            },
+            "AdminUserResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "avatar_url": {
+                        "type": "null"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/Role"
+                    },
+                    "commune": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CommuneResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "verification_status": {
+                        "$ref": "#/components/schemas/VerificationStatus"
+                    },
+                    "rating": {
+                        "type": "object",
+                        "properties": {
+                            "average": {
+                                "type": "number"
+                            },
+                            "count": {
+                                "type": "integer"
+                            }
+                        },
+                        "required": [
+                            "average",
+                            "count"
+                        ]
+                    },
+                    "is_blocked": {
+                        "type": "boolean"
+                    },
+                    "blocked_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "blocked_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "blocked_by": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/UserSummaryResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "phone",
+                    "avatar_url",
+                    "role",
+                    "address",
+                    "verification_status",
+                    "rating",
+                    "is_blocked",
+                    "blocked_at",
+                    "blocked_reason",
+                    "created_at"
+                ],
+                "title": "AdminUserResource"
+            },
+            "AlertType": {
+                "type": "string",
+                "enum": [
+                    "low_rating",
+                    "report"
+                ],
+                "title": "AlertType"
+            },
             "AvailabilityBlockResource": {
                 "type": "object",
                 "properties": {
@@ -3259,6 +5075,20 @@
                     "end_time"
                 ],
                 "title": "AvailabilityRuleResource"
+            },
+            "BlockUserRequest": {
+                "type": "object",
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 500
+                    }
+                },
+                "required": [
+                    "reason"
+                ],
+                "title": "BlockUserRequest"
             },
             "BookingResource": {
                 "type": "object",
@@ -3327,6 +5157,12 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "reviews": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ReviewResource"
+                        }
                     },
                     "created_at": {
                         "type": [
@@ -3482,6 +5318,71 @@
                 ],
                 "title": "CategoryResource"
             },
+            "ClientProfileResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "avatar_url": {
+                        "type": "null"
+                    },
+                    "commune": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CommuneResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "rating": {
+                        "type": "object",
+                        "properties": {
+                            "average": {
+                                "type": "number"
+                            },
+                            "count": {
+                                "type": "integer"
+                            }
+                        },
+                        "required": [
+                            "average",
+                            "count"
+                        ]
+                    },
+                    "completed_bookings_count": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "integer",
+                                "minimum": 0
+                            }
+                        ]
+                    },
+                    "member_since": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "avatar_url",
+                    "rating",
+                    "completed_bookings_count",
+                    "member_since"
+                ],
+                "title": "ClientProfileResource"
+            },
             "CommuneResource": {
                 "type": "object",
                 "properties": {
@@ -3514,6 +5415,16 @@
                 ],
                 "title": "CommuneType"
             },
+            "DocumentType": {
+                "type": "string",
+                "enum": [
+                    "id_document",
+                    "selfie",
+                    "certificate",
+                    "work_evidence"
+                ],
+                "title": "DocumentType"
+            },
             "FavoriteResource": {
                 "type": "object",
                 "properties": {
@@ -3545,6 +5456,19 @@
                     "created_at"
                 ],
                 "title": "FavoriteResource"
+            },
+            "ForgotPasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    }
+                },
+                "required": [
+                    "email"
+                ],
+                "title": "ForgotPasswordRequest"
             },
             "LoginRequest": {
                 "type": "object",
@@ -3798,6 +5722,21 @@
                             "null"
                         ]
                     },
+                    "distance_km": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    },
+                    "next_available_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "is_suggested": {
+                        "type": "boolean"
+                    },
                     "categories": {
                         "type": "array",
                         "items": {
@@ -3825,7 +5764,9 @@
                     "rating",
                     "description",
                     "experience_years",
-                    "hourly_rate"
+                    "hourly_rate",
+                    "distance_km",
+                    "next_available_at"
                 ],
                 "title": "ProfessionalResource"
             },
@@ -4062,6 +6003,109 @@
                 },
                 "title": "RejectBookingRequest"
             },
+            "ReplaceVerificationDocumentRequest": {
+                "type": "object",
+                "description": "HU008: Reemplazar un documento rechazado y reenviar a verificaci\u00f3n.",
+                "properties": {
+                    "file": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "Maximum file size: 10240 kilobytes."
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "file"
+                ],
+                "title": "ReplaceVerificationDocumentRequest"
+            },
+            "ReportResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "reporter": {
+                        "$ref": "#/components/schemas/UserSummaryResource"
+                    },
+                    "reported_user": {
+                        "$ref": "#/components/schemas/UserSummaryResource"
+                    },
+                    "booking_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ReportStatus"
+                    },
+                    "resolver": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/UserSummaryResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "resolution_notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "booking_id",
+                    "reason",
+                    "description",
+                    "status",
+                    "resolution_notes",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "ReportResource"
+            },
+            "ReportStatus": {
+                "type": "string",
+                "enum": [
+                    "open",
+                    "resolved",
+                    "dismissed"
+                ],
+                "title": "ReportStatus"
+            },
             "RescheduleBookingRequest": {
                 "type": "object",
                 "description": "HU012: nueva hora para la reserva. Debe ser una de GET /professionals/{id}/slots;\nel horario, los bloqueos y los cruces los valida BookingService.",
@@ -4075,6 +6119,99 @@
                     "starts_at"
                 ],
                 "title": "RescheduleBookingRequest"
+            },
+            "ResetPasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "token": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string",
+                        "format": "email"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "password_confirmation": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "token",
+                    "email",
+                    "password",
+                    "password_confirmation"
+                ],
+                "title": "ResetPasswordRequest"
+            },
+            "ResolveReportRequest": {
+                "type": "object",
+                "properties": {
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "resolved",
+                            "dismissed"
+                        ]
+                    },
+                    "resolution_notes": {
+                        "type": "string",
+                        "minLength": 5,
+                        "maxLength": 2000
+                    },
+                    "block_user": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "status",
+                    "resolution_notes"
+                ],
+                "title": "ResolveReportRequest"
+            },
+            "ReviewResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "booking_id": {
+                        "type": "integer"
+                    },
+                    "reviewer": {
+                        "$ref": "#/components/schemas/UserSummaryResource"
+                    },
+                    "reviewee": {
+                        "$ref": "#/components/schemas/UserSummaryResource"
+                    },
+                    "rating": {
+                        "type": "integer"
+                    },
+                    "comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "booking_id",
+                    "rating",
+                    "comment",
+                    "created_at"
+                ],
+                "title": "ReviewResource"
             },
             "Role": {
                 "type": "string",
@@ -4233,6 +6370,96 @@
                 ],
                 "title": "StoreProfessionalServiceRequest"
             },
+            "StoreReportRequest": {
+                "type": "object",
+                "properties": {
+                    "reported_user_id": {
+                        "type": "integer"
+                    },
+                    "booking_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "reason": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 100
+                    },
+                    "description": {
+                        "type": "string",
+                        "minLength": 10,
+                        "maxLength": 2000
+                    }
+                },
+                "required": [
+                    "reported_user_id",
+                    "reason",
+                    "description"
+                ],
+                "title": "StoreReportRequest"
+            },
+            "StoreReviewRequest": {
+                "type": "object",
+                "properties": {
+                    "rating": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5
+                    },
+                    "comment": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 1000
+                    }
+                },
+                "required": [
+                    "rating"
+                ],
+                "title": "StoreReviewRequest"
+            },
+            "StoreVerificationRequest": {
+                "type": "object",
+                "description": "HU008 / HU013: Solicitud inicial de verificaci\u00f3n de cuenta y cargue de documentos KYC.",
+                "properties": {
+                    "documents": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "type": {
+                                    "$ref": "#/components/schemas/DocumentType"
+                                },
+                                "file": {
+                                    "type": "string",
+                                    "format": "binary",
+                                    "contentMediaType": "application/octet-stream",
+                                    "description": "Maximum file size: 10240 kilobytes."
+                                },
+                                "title": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ],
+                                    "maxLength": 255
+                                }
+                            },
+                            "required": [
+                                "type",
+                                "file"
+                            ]
+                        },
+                        "minItems": 3
+                    }
+                },
+                "required": [
+                    "documents"
+                ],
+                "title": "StoreVerificationRequest"
+            },
             "SyncProfessionalCategoriesRequest": {
                 "type": "object",
                 "description": "HU009: especialidades del profesional (categor\u00edas ra\u00edz del cat\u00e1logo). Reemplaza las anteriores.",
@@ -4291,6 +6518,26 @@
                     "rules"
                 ],
                 "title": "UpdateAvailabilityRulesRequest"
+            },
+            "UpdatePasswordRequest": {
+                "type": "object",
+                "properties": {
+                    "current_password": {
+                        "type": "string"
+                    },
+                    "password": {
+                        "type": "string"
+                    },
+                    "password_confirmation": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "current_password",
+                    "password",
+                    "password_confirmation"
+                ],
+                "title": "UpdatePasswordRequest"
             },
             "UpdateProfessionalProfileRequest": {
                 "type": "object",
@@ -4389,6 +6636,67 @@
                     }
                 },
                 "title": "UpdateProfessionalServiceRequest"
+            },
+            "UpdateProfileRequest": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 20
+                    },
+                    "commune_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "latitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": -90,
+                        "maximum": 90
+                    },
+                    "longitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": -180,
+                        "maximum": 180
+                    }
+                },
+                "title": "UpdateProfileRequest"
+            },
+            "UploadAvatarRequest": {
+                "type": "object",
+                "properties": {
+                    "avatar": {
+                        "type": "string",
+                        "format": "binary",
+                        "contentMediaType": "application/octet-stream",
+                        "description": "Maximum file size: 5120 kilobytes."
+                    }
+                },
+                "required": [
+                    "avatar"
+                ],
+                "title": "UploadAvatarRequest"
             },
             "UserResource": {
                 "type": "object",
@@ -4518,6 +6826,139 @@
                     "rating"
                 ],
                 "title": "UserSummaryResource"
+            },
+            "VerificationDocumentResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "type": {
+                        "type": "string"
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "rejection_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "file_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "type",
+                    "title",
+                    "status",
+                    "rejection_reason",
+                    "file_url",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "VerificationDocumentResource"
+            },
+            "VerificationRequestResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "rejection_reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "background_check_status": {
+                        "type": "string"
+                    },
+                    "background_check_notes": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "submitted_at": {
+                        "type": "string"
+                    },
+                    "reviewed_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "user": {
+                        "$ref": "#/components/schemas/UserResource"
+                    },
+                    "reviewer": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/UserSummaryResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "documents": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/VerificationDocumentResource"
+                        }
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "status",
+                    "rejection_reason",
+                    "background_check_status",
+                    "background_check_notes",
+                    "submitted_at",
+                    "reviewed_at",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "VerificationRequestResource"
             },
             "VerificationStatus": {
                 "type": "string",

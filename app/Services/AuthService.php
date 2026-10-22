@@ -82,18 +82,14 @@ class AuthService
 
     /**
      * HU020: envía el enlace de restablecimiento de contraseña al correo indicado.
+     * Responde lo mismo exista o no la cuenta (y aunque se haya pedido hace poco): así
+     * nadie puede averiguar qué correos están registrados.
      */
     public function sendPasswordResetLink(string $email): string
     {
-        $status = Password::sendResetLink(['email' => $email]);
+        Password::sendResetLink(['email' => $email]);
 
-        if ($status === Password::RESET_LINK_SENT) {
-            return __($status);
-        }
-
-        throw ValidationException::withMessages([
-            'email' => [__($status)],
-        ]);
+        return __(Password::RESET_LINK_SENT);
     }
 
     /**

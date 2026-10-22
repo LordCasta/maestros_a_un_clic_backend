@@ -190,6 +190,8 @@ it('returns public reviews of a professional (HU029)', function () {
 });
 
 it('filters professionals by available_now (HU030)', function () {
+    // Hora fija: con la hora real, de 10 p. m. a 2 a. m. la franja de ±2 h cruza la medianoche.
+    Carbon::setTestNow(Carbon::parse('2026-10-21 10:00', config('app.timezone')));
     $now = Carbon::now(config('app.timezone'));
     $weekday = $now->dayOfWeek;
     $timeStart = $now->copy()->subHours(2)->format('H:i:s');
