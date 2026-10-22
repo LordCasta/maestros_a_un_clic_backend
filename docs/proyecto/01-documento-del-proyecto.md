@@ -173,10 +173,12 @@ La plataforma es **autogestionable**. Clientes y profesionales administran sus p
 | Notificaciones en tiempo real y centro de notificaciones | Implementado |
 | Historiales, totales, servicios en proceso e ingresos del profesional | Implementado |
 | Favoritos y búsqueda por nombre, categoría y precio | Implementado |
-| Verificación de identidad (cargue de documentos y revisión del administrador), bloqueo de usuarios | En desarrollo (módulo verificación-admin) |
-| Calificación recíproca, comentarios, reportes y alertas por baja calificación | En desarrollo (módulo calificaciones) |
-| Búsqueda por cercanía con distancia, "disponible ahora" y mapa | En desarrollo (módulo búsqueda) |
-| Gestión de la cuenta: editar perfil, foto, contraseña, recuperación, eliminación y cierre por inactividad | En desarrollo (módulo cuenta) |
+| Verificación de identidad (cargue de documentos y revisión del administrador), bloqueo de usuarios | Implementado |
+| Calificación recíproca, comentarios, reportes y alertas por baja calificación | Implementado |
+| Búsqueda por cercanía con distancia, comunas aledañas, "disponible ahora" y mapa | Implementado |
+| Gestión de la cuenta: editar perfil, foto, contraseña, recuperación, eliminación con anonimización y cierre por inactividad | Implementado |
+
+Las 49 historias de usuario están terminadas.
 
 El detalle por historia, con sus endpoints, pantallas y pruebas, está en [04-trazabilidad.md](04-trazabilidad.md).
 
