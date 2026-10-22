@@ -48,7 +48,17 @@
                                             "const": "Perfil y ubicaci\u00f3n actualizados correctamente."
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/UserResource"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/UserResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "commune"
+                                                    ]
+                                                }
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -70,7 +80,7 @@
             },
             "delete": {
                 "operationId": "account.destroy",
-                "summary": "HU023: eliminaci\u00f3n l\u00f3gica de cuenta con verificaci\u00f3n de contrase\u00f1a y sin reservas activas",
+                "summary": "HU023: eliminaci\u00f3n de la cuenta con anonimizaci\u00f3n, verificando la contrase\u00f1a y sin reservas activas",
                 "tags": [
                     "Account"
                 ],
@@ -112,11 +122,11 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -154,7 +164,17 @@
                                             "const": "Foto de perfil actualizada correctamente."
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/UserResource"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/UserResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "commune"
+                                                    ]
+                                                }
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -331,7 +351,18 @@
                                             "const": "Alerta marcada como resuelta."
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/AdminAlertResource"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/AdminAlertResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "user",
+                                                        "resolver"
+                                                    ]
+                                                }
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -465,7 +496,19 @@
                                             "const": "Reporte actualizado correctamente."
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/ReportResource"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/ReportResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "reporter",
+                                                        "reported_user",
+                                                        "resolver"
+                                                    ]
+                                                }
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -616,7 +659,18 @@
                                             "const": "Usuario bloqueado correctamente."
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/AdminUserResource"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/AdminUserResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "commune",
+                                                        "blocked_by"
+                                                    ]
+                                                }
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -628,36 +682,14 @@
                             }
                         }
                     },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "description": "An error",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "message": {
-                                            "type": "string",
-                                            "description": "Error overview.",
-                                            "examples": [
-                                                "No se puede bloquear a un administrador."
-                                            ]
-                                        }
-                                    },
-                                    "required": [
-                                        "message"
-                                    ]
-                                }
-                            }
-                        }
-                    },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
                     }
                 }
             }
@@ -696,7 +728,18 @@
                                             "const": "Usuario desbloqueado correctamente."
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/AdminUserResource"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/AdminUserResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "commune",
+                                                        "blocked_by"
+                                                    ]
+                                                }
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -2732,7 +2775,7 @@
         "/clients/{id}": {
             "get": {
                 "operationId": "clientProfile.show",
-                "summary": "HU044: vista del perfil del cliente por parte del profesional",
+                "summary": "HU044: vista del perfil del cliente por parte del profesional, desde una solicitud",
                 "tags": [
                     "ClientProfile"
                 ],
@@ -2782,6 +2825,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
@@ -4448,7 +4494,18 @@
                                             "const": "Reporte enviado correctamente."
                                         },
                                         "data": {
-                                            "$ref": "#/components/schemas/ReportResource"
+                                            "allOf": [
+                                                {
+                                                    "$ref": "#/components/schemas/ReportResource"
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "required": [
+                                                        "reporter",
+                                                        "reported_user"
+                                                    ]
+                                                }
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -6372,6 +6429,7 @@
             },
             "StoreReportRequest": {
                 "type": "object",
+                "description": "HU024. Se reporta desde el perfil de un profesional (sin reserva) o desde una reserva;\nen ese caso, quien reporta y el reportado deben ser sus dos participantes.",
                 "properties": {
                     "reported_user_id": {
                         "type": "integer"

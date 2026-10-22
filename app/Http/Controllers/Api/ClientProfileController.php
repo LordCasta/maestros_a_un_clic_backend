@@ -11,13 +11,15 @@ use Illuminate\Http\JsonResponse;
 class ClientProfileController extends Controller
 {
     /**
-     * HU044: vista del perfil del cliente por parte del profesional.
+     * HU044: vista del perfil del cliente por parte del profesional, desde una solicitud.
      */
     public function show(int $id): JsonResponse
     {
         $client = User::where('role', Role::Client)
             ->with('commune')
             ->findOrFail($id);
+
+        $this->authorize('viewClientProfile', $client);
 
         return $this->ok(new ClientProfileResource($client));
     }
