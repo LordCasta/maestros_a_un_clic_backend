@@ -152,8 +152,8 @@ it('lists and resolves system alerts (HU045)', function () {
 });
 
 it('returns client profile for booking interactions (HU044)', function () {
-    $pro = User::factory()->professional()->create();
     $client = User::factory()->client()->create();
+    $pro = Booking::factory()->create(['client_id' => $client->id])->professional;
 
     Sanctum::actingAs($pro);
 
@@ -162,6 +162,56 @@ it('returns client profile for booking interactions (HU044)', function () {
         ->assertJsonPath('data.id', $client->id)
         ->assertJsonPath('data.name', $client->name)
         ->assertJsonStructure(['data' => ['rating', 'completed_bookings_count', 'member_since']]);
+});
+
+it('only shows a client profile to a professional who has a booking with that client (HU044)', function () {
+    $client = User::factory()->client()->create();
+
+    Sanctum::actingAs(User::factory()->professional()->create());
+    $this->getJson("/api/v1/clients/{$client->id}")->assertForbidden();
+
+    Sanctum::actingAs(User::factory()->client()->create());
+    $this->getJson("/api/v1/clients/{$client->id}")->assertForbidden();
+});
+
+it('reports the other party of a booking (HU024)', function () {
+    $booking = Booking::factory()->create();
+    Sanctum::actingAs($booking->client);
+
+    $this->postJson('/api/v1/reports', [
+        'reported_user_id' => $booking->professional_id,
+        'booking_id' => $booking->id,
+        'reason' => 'No llegó',
+        'description' => 'El profesional no llegó a la hora acordada ni avisó.',
+    ])->assertCreated()->assertJsonPath('data.booking_id', $booking->id);
+});
+
+it('rejects a report tied to a booking the reporter is not part of (HU024)', function () {
+    $booking = Booking::factory()->create();
+    $outsider = User::factory()->client()->create();
+    Sanctum::actingAs($outsider);
+
+    $this->postJson('/api/v1/reports', [
+        'reported_user_id' => $booking->professional_id,
+        'booking_id' => $booking->id,
+        'reason' => 'Fraude',
+        'description' => 'Intento reportar usando una reserva ajena.',
+    ])->assertUnprocessable()->assertJsonValidationErrors(['booking_id']);
+
+    expect(Report::count())->toBe(0);
+});
+
+it('rejects a report tied to a booking when the reported user is not the other party (HU024)', function () {
+    $booking = Booking::factory()->create();
+    $stranger = User::factory()->professional()->create();
+    Sanctum::actingAs($booking->client);
+
+    $this->postJson('/api/v1/reports', [
+        'reported_user_id' => $stranger->id,
+        'booking_id' => $booking->id,
+        'reason' => 'Fraude',
+        'description' => 'Reporto a alguien que no estuvo en esta reserva.',
+    ])->assertUnprocessable()->assertJsonValidationErrors(['booking_id']);
 });
 
 it('returns public reviews of a professional (HU029)', function () {

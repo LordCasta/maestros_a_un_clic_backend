@@ -122,8 +122,8 @@ Route::middleware(['auth:sanctum', 'not_blocked'])->group(function () {
     Route::post('verification', [VerificationController::class, 'store']);
     Route::post('verification/documents/{document}', [VerificationController::class, 'replaceDocument'])->whereNumber('document');
 
-    // Perfil del cliente (HU044)
-    Route::get('clients/{id}', [ClientProfileController::class, 'show'])->whereNumber('id');
+    // Perfil del cliente, visto por un profesional desde una solicitud (HU044)
+    Route::get('clients/{id}', [ClientProfileController::class, 'show'])->whereNumber('id')->middleware('role:professional');
 
     // Reportes de usuario (HU024)
     Route::post('reports', [ReportController::class, 'store']);

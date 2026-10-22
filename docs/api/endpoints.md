@@ -920,7 +920,7 @@ Las reservas, reseñas y chats se conservan para la otra parte, que verá `"Usua
 | Método | Ruta | Acceso | HU |
 |--------|------|--------|----|
 | GET | `/professionals/{id}/reviews` | 🌐 | HU029 |
-| GET | `/clients/{id}` | 🔑 | HU044 |
+| GET | `/clients/{id}` | 🛠 | HU044 |
 | POST | `/reports` | 🔑 | HU024 |
 
 #### `GET /professionals/{id}/reviews`
@@ -928,16 +928,28 @@ Listado paginado de valoraciones y reseñas recibidas por un profesional.
 
 #### `GET /clients/{id}`
 Perfil del cliente con nombre, comuna, antigüedad y cantidad de reservas completadas.
+Solo para el profesional que tiene (o tuvo) una reserva con ese cliente: se abre desde la solicitud.
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **200** | Perfil del cliente |
+| **403** | No es profesional, o no tiene ninguna reserva con ese cliente |
+| **404** | El id no es de un cliente |
 
 #### `POST /reports`
 Crea un reporte hacia otro usuario por fraude, incumplimiento o conducta inadecuada.
 
 | Campo | Regla |
 |-------|-------|
-| `reported_user_id` | obligatorio, id de usuario diferente al autenticado |
-| `booking_id` | opcional, id de reserva existente |
+| `reported_user_id` | obligatorio, id de un usuario activo diferente al autenticado |
+| `booking_id` | opcional. Si viene, quien reporta y el reportado deben ser los dos participantes de esa reserva |
 | `reason` | obligatorio, texto 3–100 caracteres |
 | `description` | obligatorio, texto 10–2000 caracteres |
+
+| Respuesta | Cuándo |
+|-----------|--------|
+| **201** | Reporte creado; se abre una alerta para los administradores (HU045) |
+| **422** | Validación, auto-reporte o reserva en la que no participan ambos |
 
 ---
 

@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\Role;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\BlockUserRequest;
 use App\Http\Resources\AdminUserResource;
 use App\Models\User;
+use App\Services\ModerationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class AdminUserController extends Controller
 {
+    public function __construct(private readonly ModerationService $moderation) {}
+
     /**
      * HU038: listado de usuarios con filtros para moderación y administración.
      */
@@ -45,22 +47,7 @@ class AdminUserController extends Controller
      */
     public function block(BlockUserRequest $request, User $user): JsonResponse
     {
-        if ($user->id === $request->user()->id) {
-            abort(422, 'No puedes bloquear tu propia cuenta.');
-        }
-
-        if ($user->role === Role::Admin) {
-            abort(403, 'No se puede bloquear a un administrador.');
-        }
-
-        $user->update([
-            'blocked_at' => now(),
-            'blocked_reason' => $request->validated('reason'),
-            'blocked_by' => $request->user()->id,
-        ]);
-
-        $user->tokens()->delete();
-        $user->load(['commune', 'blockedBy']);
+        $user = $this->moderation->block($user, $request->user(), $request->validated('reason'));
 
         return $this->ok(new AdminUserResource($user), 'Usuario bloqueado correctamente.');
     }
@@ -68,15 +55,9 @@ class AdminUserController extends Controller
     /**
      * HU038: desbloquear a un usuario.
      */
-    public function unblock(Request $request, User $user): JsonResponse
+    public function unblock(User $user): JsonResponse
     {
-        $user->update([
-            'blocked_at' => null,
-            'blocked_reason' => null,
-            'blocked_by' => null,
-        ]);
-
-        $user->load(['commune', 'blockedBy']);
+        $user = $this->moderation->unblock($user);
 
         return $this->ok(new AdminUserResource($user), 'Usuario desbloqueado correctamente.');
     }
