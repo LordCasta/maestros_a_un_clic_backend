@@ -28,12 +28,12 @@ class Report extends Model
 
     public function reporter(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reporter_id');
+        return $this->belongsTo(User::class, 'reporter_id')->withTrashed();
     }
 
     public function reportedUser(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'reported_user_id');
+        return $this->belongsTo(User::class, 'reported_user_id')->withTrashed();
     }
 
     public function booking(): BelongsTo
@@ -43,6 +43,6 @@ class Report extends Model
 
     public function resolver(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'resolved_by');
+        return $this->belongsTo(User::class, 'resolved_by')->withTrashed();
     }
 }
