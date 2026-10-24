@@ -15,7 +15,8 @@ Documentación de **Maestros a un clic** como proyecto de ingeniería de softwar
 | 7 | [Seguridad y privacidad](07-seguridad-y-privacidad.md) | Controles OWASP, Ley 1581 de 2012 y acciones pendientes | [PDF](pdf/07-seguridad-y-privacidad.pdf) |
 | 8 | [Decisiones de arquitectura](08-decisiones-de-arquitectura.md) | Qué se decidió y por qué (ADR) | [PDF](pdf/08-decisiones-de-arquitectura.pdf) |
 | 9 | [Informe de análisis funcional](09-informe-analisis-funcional.md) | Estructura funcional, roles, reglas de negocio, interfaces con capturas, matriz y resultados de pruebas funcionales, hallazgos y propuestas de mejora | [PDF](pdf/09-informe-analisis-funcional.pdf) |
-| — | **Todo en un solo archivo** | Los nueve documentos con una sola portada | [PDF](pdf/documentacion-completa.pdf) |
+| 10 | [Guía de despliegue en Azure](10-guia-de-despliegue.md) | Paso a paso para crear la máquina virtual, preparar el servidor, conectar GitHub y cómo despliega solo al fusionar a `main` | [PDF](pdf/10-guia-de-despliegue.pdf) |
+| — | **Todo en un solo archivo** | Los diez documentos con una sola portada | [PDF](pdf/documentacion-completa.pdf) |
 
 ## Documentación técnica
 
