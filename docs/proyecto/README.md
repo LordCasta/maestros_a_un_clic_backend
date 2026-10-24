@@ -14,7 +14,8 @@ Documentación de **Maestros a un clic** como proyecto de ingeniería de softwar
 | 6 | [Despliegue y operación](06-despliegue-y-operacion.md) | Servidor, configuración, procesos, respaldos y monitoreo | [PDF](pdf/06-despliegue-y-operacion.pdf) |
 | 7 | [Seguridad y privacidad](07-seguridad-y-privacidad.md) | Controles OWASP, Ley 1581 de 2012 y acciones pendientes | [PDF](pdf/07-seguridad-y-privacidad.pdf) |
 | 8 | [Decisiones de arquitectura](08-decisiones-de-arquitectura.md) | Qué se decidió y por qué (ADR) | [PDF](pdf/08-decisiones-de-arquitectura.pdf) |
-| — | **Todo en un solo archivo** | Los ocho documentos con una sola portada | [PDF](pdf/documentacion-completa.pdf) |
+| 9 | [Informe de análisis funcional](09-informe-analisis-funcional.md) | Estructura funcional, roles, reglas de negocio, interfaces con capturas, matriz y resultados de pruebas funcionales, hallazgos y propuestas de mejora | [PDF](pdf/09-informe-analisis-funcional.pdf) |
+| — | **Todo en un solo archivo** | Los nueve documentos con una sola portada | [PDF](pdf/documentacion-completa.pdf) |
 
 ## Documentación técnica
 
@@ -32,4 +33,5 @@ Documentación de **Maestros a un clic** como proyecto de ingeniería de softwar
 - **La fuente es el Markdown.** Los PDF se generan desde él; no se editan a mano.
 - Para regenerarlos, desde la raíz del backend, ejecuta `npm install` una vez y luego `npm run docs:pdf`. Hace falta Chrome o Edge instalado; si no lo encuentra, indica su ruta en la variable `CHROME_PATH`.
 - La portada (integrantes, institución, curso, docente) se edita en [`_pdf/portada.json`](_pdf/portada.json).
+- Las pruebas funcionales y las capturas del informe 09 se repiten con los scripts de [`_pruebas/`](_pruebas/), con el backend y el frontend corriendo en local. Las imágenes quedan en `img/`.
 - Al cerrar una historia, actualiza su estado en [02-requisitos.md](02-requisitos.md) y en [04-trazabilidad.md](04-trazabilidad.md), y regenera los PDF.
