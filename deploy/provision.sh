@@ -114,11 +114,13 @@ artisan migrate --force
 artisan db:seed --class=CommuneSeeder --force
 artisan db:seed --class=CategorySeeder --force
 DEMO_PASSWORD=""
-if [ "$SEED_DEMO" = "1" ] && [ "$(artisan tinker --execute 'echo App\Models\User::count();')" = "0" ]; then
+# Sin tinker: www-data no puede escribir la configuración de PsySH en /var/www.
+if [ "$SEED_DEMO" = "1" ] && [ "$(mysql -N -e 'SELECT COUNT(*) FROM maestros.users')" = "0" ]; then
   artisan db:seed --class=DemoSeeder --force
   # En una URL pública, "password" sería una puerta abierta: todas las cuentas demo reciben otra.
   DEMO_PASSWORD=$(openssl rand -base64 12 | tr -d '/+=' | cut -c1-14)
-  artisan tinker --execute "App\Models\User::query()->update(['password' => Illuminate\Support\Facades\Hash::make('$DEMO_PASSWORD')]);"
+  HASH=$(php -r 'echo password_hash($argv[1], PASSWORD_BCRYPT, ["cost" => 12]);' "$DEMO_PASSWORD")
+  mysql maestros -e "UPDATE users SET password = '$HASH'"
 fi
 sudo -u "$APP_USER" composer install --no-dev --no-interaction --no-progress --optimize-autoloader
 sudo -u "$APP_USER" php artisan storage:link || true

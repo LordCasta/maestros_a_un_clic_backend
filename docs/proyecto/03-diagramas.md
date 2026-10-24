@@ -421,13 +421,15 @@ flowchart TB
 
 ## 8. Despliegue
 
-Topología prevista para producción. Los pasos están en [06-despliegue-y-operacion.md](06-despliegue-y-operacion.md).
+Topología de producción en Azure, con despliegue continuo desde GitHub. Los pasos están en [06-despliegue-y-operacion.md](06-despliegue-y-operacion.md).
 
 ```mermaid
 flowchart LR
     user(["Navegador"])
 
-    subgraph ec2["Servidor (AWS EC2, Ubuntu)"]
+    gha["GitHub Actions<br/>(despliegue al fusionar a main)"]
+
+    subgraph ec2["Servidor (máquina virtual de Azure, Ubuntu 24.04)"]
         nginx["Nginx<br/>TLS · HTTPS / WSS"]
         spa["Frontend compilado<br/>(archivos estáticos)"]
         fpm["PHP-FPM<br/>API Laravel"]
@@ -442,6 +444,7 @@ flowchart LR
     nginx --> spa
     nginx -- "/api" --> fpm
     nginx -- "/app (wss)" --> reverb
+    gha -- "SSH (comando forzado)" --> ec2
     fpm --> mysql
     fpm --> storage
     fpm -- "trabajos" --> mysql
