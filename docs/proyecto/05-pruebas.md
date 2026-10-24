@@ -78,6 +78,10 @@ Ejecución del 22 de octubre de 2026 sobre `main`, con las 49 historias terminad
 | Calificaciones y reportes | ReviewBookingModal, ReportUserModal, ProfessionalCard |
 | Base | router (guards), cliente HTTP, formularios, formato, tokens, verificador de colores, favoritos, esquemas de auth |
 
+### 4.3 Pruebas funcionales sobre la aplicación
+
+Además de las suites automatizadas, para la entrega final se ejecutó una batería de **44 pruebas funcionales de caja negra** sobre la aplicación en marcha: 28 positivas y 16 negativas, con Chrome para los flujos de pantalla. Las 44 se aprobaron el 23 de octubre de 2026. También se revisaron 29 pantallas en tres anchos (celular, tablet y escritorio). La matriz, los resultados y los hallazgos están en el [informe de análisis funcional](09-informe-analisis-funcional.md#3-validación-funcional-y-oportunidades-de-mejora), y los scripts, en [`_pruebas/`](_pruebas/).
+
 ## 5. Cómo ejecutar las pruebas
 
 ```bash

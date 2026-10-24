@@ -1,0 +1,446 @@
+{
+  "fecha": "2026-10-24T03:52:18.500Z",
+  "results": [
+    {
+      "id": "CP-01",
+      "hu": "HU001",
+      "modulo": "Autenticación",
+      "nombre": "Iniciar sesión con credenciales válidas",
+      "tipo": "Positivo",
+      "esperado": "200 con token y datos del usuario",
+      "obtenido": "200, token emitido, rol client",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-02",
+      "hu": "HU001",
+      "modulo": "Autenticación",
+      "nombre": "Iniciar sesión con contraseña incorrecta",
+      "tipo": "Negativo",
+      "esperado": "401 \"Credenciales incorrectas.\"",
+      "obtenido": "401 \"Credenciales incorrectas.\"",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-03",
+      "hu": "HU006, HU048",
+      "modulo": "Autenticación",
+      "nombre": "Registro de cliente con datos vacíos",
+      "tipo": "Negativo",
+      "esperado": "422 con error en nombre, correo y contraseña",
+      "obtenido": "422, campos con error: name, email, password",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-04",
+      "hu": "HU020",
+      "modulo": "Cuenta",
+      "nombre": "Recuperar contraseña con un correo no registrado",
+      "tipo": "Negativo",
+      "esperado": "200 con el mismo mensaje que para un correo registrado (no revela cuentas)",
+      "obtenido": "200 y 200, mismo mensaje: \"Si el correo está registrado, te enviamos el enlace para restablecer tu contraseña.\"",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-05",
+      "hu": "HU019",
+      "modulo": "Cuenta",
+      "nombre": "Cambiar la contraseña con la actual incorrecta",
+      "tipo": "Negativo",
+      "esperado": "422 en current_password",
+      "obtenido": "422, error en current_password",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-06",
+      "hu": "HU022",
+      "modulo": "Cuenta",
+      "nombre": "Actualizar la ubicación con una comuna inexistente",
+      "tipo": "Negativo",
+      "esperado": "422 en commune_id",
+      "obtenido": "422, error en commune_id",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-07",
+      "hu": "HU021",
+      "modulo": "Autenticación",
+      "nombre": "Cerrar sesión invalida el token",
+      "tipo": "Positivo",
+      "esperado": "Logout 200 y luego 401 con el mismo token",
+      "obtenido": "logout 200, /auth/me después 401",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-08",
+      "hu": "RNF-SEG-01",
+      "modulo": "Seguridad",
+      "nombre": "Consultar reservas sin token",
+      "tipo": "Negativo",
+      "esperado": "401",
+      "obtenido": "401",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-09",
+      "hu": "RNF-SEG-02",
+      "modulo": "Seguridad",
+      "nombre": "Un cliente entra al panel de administración",
+      "tipo": "Negativo",
+      "esperado": "403",
+      "obtenido": "403 \"Esta acción no está disponible para tu tipo de cuenta.\"",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-10",
+      "hu": "HU033, HU010",
+      "modulo": "Búsqueda",
+      "nombre": "Filtrar profesionales por categoría",
+      "tipo": "Positivo",
+      "esperado": "Todos los resultados tienen esa especialidad",
+      "obtenido": "2 resultados de \"Carpintería\", todos con la especialidad",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-11",
+      "hu": "HU046",
+      "modulo": "Búsqueda",
+      "nombre": "Ordenar por precio de menor a mayor",
+      "tipo": "Positivo",
+      "esperado": "Tarifas en orden ascendente",
+      "obtenido": "13 tarifas en orden: 40000, 50000, 55000, 85000, 85000…",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-12",
+      "hu": "HU039",
+      "modulo": "Búsqueda",
+      "nombre": "Buscar por nombre",
+      "tipo": "Positivo",
+      "esperado": "Aparece el profesional buscado",
+      "obtenido": "\"Juan\": 1 resultado(s), incluye a Juan Castaño",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-13",
+      "hu": "HU002",
+      "modulo": "Búsqueda",
+      "nombre": "Comuna sin profesionales sugiere comunas aledañas",
+      "tipo": "Positivo",
+      "esperado": "meta.suggested_from_neighbors = true y resultados marcados como sugeridos",
+      "obtenido": "Comuna \"Popular\": 1 sugeridos de comunas vecinas",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-14",
+      "hu": "HU040",
+      "modulo": "Búsqueda",
+      "nombre": "Buscar por ubicación muestra la distancia",
+      "tipo": "Positivo",
+      "esperado": "Cada resultado trae distance_km y vienen del más cercano al más lejano",
+      "obtenido": "9 resultados; distancias (km): 1.2, 1.5, 2.6, 2.9, 3.8",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-15",
+      "hu": "HU030",
+      "modulo": "Búsqueda",
+      "nombre": "Filtro \"disponible ahora\"",
+      "tipo": "Positivo",
+      "esperado": "200; solo profesionales dentro de su horario en este momento",
+      "obtenido": "200, 0 disponibles a la hora de la prueba (10:47:01 p. m.)",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-16",
+      "hu": "HU029",
+      "modulo": "Calificaciones",
+      "nombre": "Ver los comentarios públicos de un profesional",
+      "tipo": "Positivo",
+      "esperado": "200 con reseñas",
+      "obtenido": "200, 1 reseña(s)",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-17",
+      "hu": "HU025",
+      "modulo": "Agenda",
+      "nombre": "Consultar horas libres de un servicio",
+      "tipo": "Positivo",
+      "esperado": "Lista de horas libres del día",
+      "obtenido": "2026-10-24: primera hora libre 2026-10-24T08:00:00-05:00",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-18",
+      "hu": "HU004",
+      "modulo": "Reservas",
+      "nombre": "Cliente verificado solicita una reserva",
+      "tipo": "Positivo",
+      "esperado": "201, estado pending",
+      "obtenido": "201, reserva #7 en pending",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-19",
+      "hu": "N2",
+      "modulo": "Reservas",
+      "nombre": "Cliente sin verificar intenta reservar",
+      "tipo": "Negativo",
+      "esperado": "403",
+      "obtenido": "403 \"Debes verificar tu identidad antes de hacer una reserva.\"",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-20",
+      "hu": "HU025",
+      "modulo": "Agenda",
+      "nombre": "La hora reservada deja de aparecer como libre",
+      "tipo": "Positivo",
+      "esperado": "El slot ya no está en la lista",
+      "obtenido": "2026-10-24T08:00:00-05:00 ya no aparece",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-21",
+      "hu": "HU018",
+      "modulo": "Notificaciones",
+      "nombre": "El profesional recibe la notificación de la solicitud",
+      "tipo": "Positivo",
+      "esperado": "Notificación booking.requested",
+      "obtenido": "\"Nueva solicitud de reserva\"",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-22",
+      "hu": "HU004",
+      "modulo": "Reservas",
+      "nombre": "El profesional acepta la solicitud",
+      "tipo": "Positivo",
+      "esperado": "200, estado accepted",
+      "obtenido": "200, accepted",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-23",
+      "hu": "HU003",
+      "modulo": "Agenda",
+      "nombre": "Bloquear un horario que tiene una reserva activa",
+      "tipo": "Negativo",
+      "esperado": "409",
+      "obtenido": "409 \"Tienes reservas activas en ese horario. Cancélalas o reprográmalas antes de bloquearlo.\"",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-24",
+      "hu": "HU036",
+      "modulo": "Reservas",
+      "nombre": "El cliente confirma la reserva aceptada",
+      "tipo": "Positivo",
+      "esperado": "200, estado confirmed",
+      "obtenido": "200, confirmed",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-25",
+      "hu": "HU027",
+      "modulo": "Reservas",
+      "nombre": "Iniciar el servicio antes de la hora pactada",
+      "tipo": "Negativo",
+      "esperado": "409",
+      "obtenido": "409 \"Solo puedes iniciar el servicio desde la hora programada (24 de octubre, 8:00 a. m.).\"",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-26",
+      "hu": "HU011",
+      "modulo": "Chat",
+      "nombre": "Enviar un mensaje en el chat de la reserva",
+      "tipo": "Positivo",
+      "esperado": "201",
+      "obtenido": "201, mensaje #10",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-27",
+      "hu": "HU011",
+      "modulo": "Chat",
+      "nombre": "Un tercero intenta leer el chat",
+      "tipo": "Negativo",
+      "esperado": "403",
+      "obtenido": "403",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-28",
+      "hu": "HU026",
+      "modulo": "Reservas",
+      "nombre": "Historial de estados de la reserva",
+      "tipo": "Positivo",
+      "esperado": "pending → accepted → confirmed con autor",
+      "obtenido": "pending → accepted → confirmed",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-29",
+      "hu": "HU012",
+      "modulo": "Reservas",
+      "nombre": "Cancelar la reserva con motivo",
+      "tipo": "Positivo",
+      "esperado": "200, estado cancelled",
+      "obtenido": "200, cancelled",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-30",
+      "hu": "HU017",
+      "modulo": "Reservas",
+      "nombre": "Resumen de reservas por estado",
+      "tipo": "Positivo",
+      "esperado": "200 con totales por estado",
+      "obtenido": "total 6: pending 2, confirmed 2, completed 1, cancelled 1",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-31",
+      "hu": "HU037",
+      "modulo": "Perfil profesional",
+      "nombre": "Consultar ingresos del profesional",
+      "tipo": "Positivo",
+      "esperado": "200 con total y servicios",
+      "obtenido": "2026-10-01 a 2026-10-23: total $0 en 0 servicio(s)",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-32",
+      "hu": "HU005",
+      "modulo": "Calificaciones",
+      "nombre": "Calificar una reserva que no está completada",
+      "tipo": "Negativo",
+      "esperado": "409",
+      "obtenido": "409 \"Solo se pueden calificar reservas completadas.\"",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-33",
+      "hu": "HU024",
+      "modulo": "Calificaciones",
+      "nombre": "Reportar a la otra parte de una reserva",
+      "tipo": "Positivo",
+      "esperado": "201 y alerta para el administrador",
+      "obtenido": "201, reporte #2",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-34",
+      "hu": "HU024",
+      "modulo": "Calificaciones",
+      "nombre": "Reportar usando una reserva ajena",
+      "tipo": "Negativo",
+      "esperado": "422 en booking_id",
+      "obtenido": "422, error en booking_id",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-35",
+      "hu": "HU045",
+      "modulo": "Administración",
+      "nombre": "El reporte genera una alerta pendiente",
+      "tipo": "Positivo",
+      "esperado": "Alerta de tipo report en la bandeja",
+      "obtenido": "Alerta #2 sobre Juan Castaño",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-36",
+      "hu": "HU044",
+      "modulo": "Calificaciones",
+      "nombre": "El profesional ve el perfil de un cliente con quien tiene reservas",
+      "tipo": "Positivo",
+      "esperado": "200 con calificación y servicios completados",
+      "obtenido": "200: Camila Restrepo, 1 servicio(s) completado(s)",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-37",
+      "hu": "HU008",
+      "modulo": "Verificación",
+      "nombre": "Enviar documentos de verificación",
+      "tipo": "Positivo",
+      "esperado": "201, solicitud en revisión",
+      "obtenido": "201, estado pending",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-38",
+      "hu": "HU014",
+      "modulo": "Administración",
+      "nombre": "La solicitud aparece en la bandeja del administrador",
+      "tipo": "Positivo",
+      "esperado": "Solicitud pendiente de pendiente@",
+      "obtenido": "Solicitud #2 con 3 documentos",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-39",
+      "hu": "HU038",
+      "modulo": "Administración",
+      "nombre": "Bloquear a un usuario le impide entrar",
+      "tipo": "Positivo",
+      "esperado": "Bloqueo 200 y login 403",
+      "obtenido": "bloqueo 200, login 403 \"Tu cuenta está bloqueada. Contacta a soporte.\"",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-40",
+      "hu": "HU023",
+      "modulo": "Cuenta",
+      "nombre": "Eliminar la cuenta la anonimiza y cierra el acceso",
+      "tipo": "Positivo",
+      "esperado": "200 y el correo anterior ya no inicia sesión",
+      "obtenido": "eliminar 200, login después 401",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-41",
+      "hu": "HU001",
+      "modulo": "Autenticación",
+      "nombre": "Login con contraseña incorrecta desde la pantalla",
+      "tipo": "Negativo",
+      "esperado": "La pantalla muestra el error y no entra",
+      "obtenido": "Se muestra \"Credenciales incorrectas.\" y sigue en /login",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-42",
+      "hu": "HU007",
+      "modulo": "Autenticación",
+      "nombre": "Registro de profesional en dos pasos desde la pantalla",
+      "tipo": "Positivo",
+      "esperado": "Crea la cuenta y lleva al panel del profesional",
+      "obtenido": "Cuenta creada y redirigida a /professional/dashboard",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-43",
+      "hu": "HU044",
+      "modulo": "Calificaciones",
+      "nombre": "Un profesional sin reservas con el cliente intenta ver su perfil",
+      "tipo": "Negativo",
+      "esperado": "403",
+      "obtenido": "403",
+      "estado": "Aprobado"
+    },
+    {
+      "id": "CP-44",
+      "hu": "RNF-SEG-04",
+      "modulo": "Seguridad",
+      "nombre": "Once intentos de inicio de sesión en un minuto",
+      "tipo": "Negativo",
+      "esperado": "Los 10 primeros responden 401 y el undécimo 429",
+      "obtenido": "401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 429",
+      "estado": "Aprobado"
+    }
+  ],
+  "notes": []
+}

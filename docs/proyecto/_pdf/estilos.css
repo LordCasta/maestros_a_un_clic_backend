@@ -44,3 +44,7 @@ hr { border: none; border-top: 1px solid #e2e8f0; margin: 6mm 0; }
 img { max-width: 100%; }
 .seccion { page-break-before: always; }
 .seccion:first-child { page-break-before: auto; }
+
+/* Figuras (capturas del informe 09): imagen y pie juntos, centrados, sin pasar de una página. */
+p:has(> img) { text-align: center; font-size: 8.5pt; color: #475569; page-break-inside: avoid; margin: 4mm 0 6mm; }
+p > img { display: block; margin: 0 auto 2mm; max-width: 100%; max-height: 190mm; width: auto; height: auto; border: 1px solid #e2e8f0; border-radius: 2mm; }
