@@ -1,0 +1,59 @@
+# Despliegue continuo: cada vez que el CI de main termina con los checks obligatorios en verde,
+# se publica la nueva versión en el servidor. Ver docs/proyecto/06-despliegue-y-operacion.md.
+#
+# Configuración del repositorio (Settings → Secrets and variables → Actions):
+#   secrets.DEPLOY_SSH_KEY      llave privada de despliegue (solo puede ejecutar deploy/ssh-gate.sh)
+#   secrets.DEPLOY_KNOWN_HOSTS  salida de `ssh-keyscan <host>`
+#   vars.DEPLOY_HOST            nombre DNS del servidor
+#   vars.DEPLOY_USER            usuario SSH del servidor
+name: Despliegue
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+# Un despliegue a la vez; uno nuevo espera a que termine el anterior.
+concurrency:
+  group: produccion
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publicar backend
+    # Solo pushes a main (no PRs) y solo si existe el servidor configurado.
+    if: >-
+      vars.DEPLOY_HOST != '' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    environment:
+      name: produccion
+      url: https://${{ vars.DEPLOY_HOST }}
+
+    steps:
+      # El job de auditoría puede fallar por un aviso nuevo sin bloquear (igual que en los PRs):
+      # se exigen solo los checks obligatorios, los de pruebas.
+      - name: Revisar que pasaron las pruebas
+        if: github.event_name == 'workflow_run'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          jobs=$(gh api "repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs" \
+            --jq '.jobs[] | select(.name | startswith("Tests")) | "\(.name)=\(.conclusion)"')
+          echo "$jobs"
+          [ -n "$jobs" ] && ! echo "$jobs" | grep -qv '=success$'
+
+      - name: Llave SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.DEPLOY_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Desplegar
+        run: ssh ${{ vars.DEPLOY_USER }}@${{ vars.DEPLOY_HOST }} backend
+
+      - name: Comprobar que responde
+        run: curl --fail --silent --show-error --retry 5 --retry-delay 3 https://${{ vars.DEPLOY_HOST }}/up > /dev/null
