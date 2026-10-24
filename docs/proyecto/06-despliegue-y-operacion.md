@@ -9,7 +9,7 @@ Cómo está puesta en producción Maestros a un clic, cómo se actualiza sola de
 | Elemento | Valor |
 |----------|-------|
 | Proveedor | Microsoft Azure, suscripción *Azure for Students* (crédito educativo, sin tarjeta) |
-| Servidor | Una máquina virtual Linux `maestros-vm` (Ubuntu Server 24.04 LTS, 1 GiB de RAM más 2 GB de intercambio) en la región North Central US, grupo de recursos `maestros-rg` |
+| Servidor | Una máquina virtual Linux `maestros-vm`, tamaño Standard_B2ats_v2 (2 vCPU, 1 GiB de RAM más 2 GB de intercambio), Ubuntu Server 24.04 LTS, en la región North Central US, grupo de recursos `maestros-vm_grupo`. El paso a paso para crearla está en la [guía de despliegue (10)](10-guia-de-despliegue.md) |
 | Dominio | Nombre DNS gratuito de Azure: `maestrosaunclic.northcentralus.cloudapp.azure.com` |
 | HTTPS | Certificado de Let's Encrypt, renovado automáticamente por Certbot |
 | Puertos abiertos | 22 (SSH con llave), 80 (redirige a HTTPS) y 443 |
